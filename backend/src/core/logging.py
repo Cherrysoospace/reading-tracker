@@ -52,12 +52,6 @@ def setup_logging(level: str = "INFO") -> None:
     file_handler.setFormatter(formatter)
     root_logger.addHandler(file_handler)
     
-    # Console handler
-    console_handler = logging.StreamHandler(sys.stdout)
-    console_handler.setLevel(numeric_level)
-    console_handler.setFormatter(formatter)
-    root_logger.addHandler(console_handler)
-    
     # Log the initialization
     root_logger.info(f"Logging system initialized with level: {level}")
 

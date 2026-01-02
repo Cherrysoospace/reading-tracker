@@ -9,5 +9,9 @@ wheels/
 # Virtual environments
 .venv
 
-
+# Database files
 reading.db
+
+# Log files
+logs/
+*.log

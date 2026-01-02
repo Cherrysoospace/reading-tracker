@@ -15,26 +15,26 @@ logger = get_logger(__name__)
 router = APIRouter(prefix="/books", tags=["Books"])
 
 
-def get_book_service() -> BookService:
+def get_book_service():
     """
     Dependency function to create and return a BookService instance.
     
-    Initializes the database connection and required repositories,
-    then creates and returns a BookService instance.
+    Uses context manager to ensure database connections are properly closed
+    after each request, preventing memory leaks.
     
-    Returns:
+    Yields:
         BookService: Configured BookService instance
     """
-    # Initialize database connection
-    db_connection = DatabaseConnection()
-    db_connection.initialize_database()
-    
-    # Initialize repositories
-    book_repo = BookRepository(db_connection)
-    session_repo = SessionRepository(db_connection)
-    
-    # Create and return BookService
-    return BookService(book_repo, session_repo)
+    # Use context manager to ensure connection is closed
+    with DatabaseConnection() as db_connection:
+        db_connection.initialize_database()
+        
+        # Initialize repositories
+        book_repo = BookRepository(db_connection)
+        session_repo = SessionRepository(db_connection)
+        
+        # Create and yield BookService
+        yield BookService(book_repo, session_repo)
 
 
 @router.post(

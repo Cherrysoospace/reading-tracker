@@ -267,6 +267,43 @@ class SessionRepository:
             logger.error(f"Failed to delete session with ID {session_id}: {e}")
             raise sqlite3.Error(f"Failed to delete session with ID {session_id}: {e}")
     
+    def get_by_id(self, session_id: int) -> Optional[ReadingSession]:
+        """
+        Retrieve a single session by its ID.
+        
+        Args:
+            session_id: ID of the session to retrieve
+            
+        Returns:
+            Optional[ReadingSession]: ReadingSession object if found, None if not found
+            
+        Raises:
+            sqlite3.Error: If database operation fails
+        """
+        try:
+            conn = self._db_connection.get_connection()
+            cursor = conn.cursor()
+            
+            cursor.execute("""
+                SELECT id, book_id, date, minutes_read 
+                FROM reading_sessions 
+                WHERE id = ?
+            """, (session_id,))
+            
+            row = cursor.fetchone()
+            
+            if row is None:
+                return None
+            
+            return ReadingSession(
+                id=row['id'],
+                book_id=row['book_id'],
+                date=row['date'],
+                minutes_read=row['minutes_read']
+            )
+        except sqlite3.Error as e:
+            raise sqlite3.Error(f"Failed to retrieve session with ID {session_id}: {e}")
+    
     def get_all_sessions_with_books(self) -> List[Tuple]:
         """
         Retrieve all sessions with their associated book information.
@@ -315,3 +352,47 @@ class SessionRepository:
             return result
         except sqlite3.Error as e:
             raise sqlite3.Error(f"Failed to retrieve sessions with book information: {e}")
+    
+    def get_by_year(self, year: int) -> List[ReadingSession]:
+        """
+        Retrieve all sessions for a specific year.
+        
+        Args:
+            year: Year to filter sessions (e.g., 2025)
+            
+        Returns:
+            List[ReadingSession]: List of ReadingSession objects for the specified year,
+                                 empty list if no sessions found
+            
+        Raises:
+            sqlite3.Error: If database operation fails
+        """
+        try:
+            conn = self._db_connection.get_connection()
+            cursor = conn.cursor()
+            
+            # Filter by year using LIKE pattern (YYYY%)
+            year_pattern = f"{year}%"
+            
+            cursor.execute("""
+                SELECT id, book_id, date, minutes_read 
+                FROM reading_sessions 
+                WHERE date LIKE ?
+                ORDER BY date DESC
+            """, (year_pattern,))
+            
+            rows = cursor.fetchall()
+            
+            sessions = []
+            for row in rows:
+                session = ReadingSession(
+                    id=row['id'],
+                    book_id=row['book_id'],
+                    date=row['date'],
+                    minutes_read=row['minutes_read']
+                )
+                sessions.append(session)
+            
+            return sessions
+        except sqlite3.Error as e:
+            raise sqlite3.Error(f"Failed to retrieve sessions for year {year}: {e}")

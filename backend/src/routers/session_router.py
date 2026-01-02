@@ -15,26 +15,26 @@ logger = get_logger(__name__)
 router = APIRouter(prefix="/sessions", tags=["Sessions"])
 
 
-def get_session_service() -> SessionService:
+def get_session_service():
     """
     Dependency function to create and return a SessionService instance.
     
-    Initializes the database connection and required repositories,
-    then creates and returns a SessionService instance.
+    Uses context manager to ensure database connections are properly closed
+    after each request, preventing memory leaks.
     
-    Returns:
+    Yields:
         SessionService: Configured SessionService instance
     """
-    # Initialize database connection
-    db_connection = DatabaseConnection()
-    db_connection.initialize_database()
-    
-    # Initialize repositories
-    session_repo = SessionRepository(db_connection)
-    book_repo = BookRepository(db_connection)
-    
-    # Create and return SessionService
-    return SessionService(session_repo, book_repo)
+    # Use context manager to ensure connection is closed
+    with DatabaseConnection() as db_connection:
+        db_connection.initialize_database()
+        
+        # Initialize repositories
+        session_repo = SessionRepository(db_connection)
+        book_repo = BookRepository(db_connection)
+        
+        # Create and yield SessionService
+        yield SessionService(session_repo, book_repo)
 
 
 @router.post(
@@ -250,13 +250,8 @@ def get_detailed_sessions(
     """
     logger.info("GET /sessions/detailed")
     
-    # Get database connection and session repo to access joined data
-    db_connection = DatabaseConnection()
-    db_connection.initialize_database()
-    session_repo = SessionRepository(db_connection)
-    
-    # Get sessions with book information
-    sessions_with_books = session_repo.get_all_sessions_with_books()
+    # Access repository through service's internal connection
+    sessions_with_books = session_service._session_repo.get_all_sessions_with_books()
     
     # Convert tuples to SessionWithBookResponse
     return [
@@ -270,8 +265,6 @@ def get_detailed_sessions(
         )
         for session in sessions_with_books
     ]
-
-
 @router.delete(
     "/{session_id}",
     status_code=status.HTTP_204_NO_CONTENT,
@@ -291,6 +284,9 @@ def delete_session(
         
     Returns:
         None (204 No Content)
+        
+    Raises:
+        HTTPException 404: If session not found
     """
     logger.info(f"DELETE /sessions/{session_id}")
     session_service.delete_session(session_id)

@@ -32,7 +32,10 @@ class DatabaseConnection:
         """
         try:
             if self._connection is None:
-                self._connection = sqlite3.connect(self.db_path)
+                self._connection = sqlite3.connect(
+                    self.db_path,
+                    check_same_thread=False  # Allow multi-threaded access for FastAPI
+                )
                 self._connection.row_factory = sqlite3.Row
             return self._connection
         except sqlite3.Error as e:
@@ -93,3 +96,28 @@ class DatabaseConnection:
                 self._connection = None
         except sqlite3.Error as e:
             raise sqlite3.Error(f"Failed to close database connection: {e}")
+    
+    def __enter__(self) -> 'DatabaseConnection':
+        """
+        Context manager entry point.
+        
+        Allows using DatabaseConnection with 'with' statement to ensure
+        proper resource cleanup.
+        
+        Returns:
+            DatabaseConnection: self
+        """
+        return self
+    
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
+        """
+        Context manager exit point.
+        
+        Automatically closes the database connection when exiting the context.
+        
+        Args:
+            exc_type: Exception type if an exception occurred
+            exc_val: Exception value if an exception occurred
+            exc_tb: Exception traceback if an exception occurred
+        """
+        self.close()

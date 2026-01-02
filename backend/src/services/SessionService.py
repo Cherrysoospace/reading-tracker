@@ -184,14 +184,19 @@ class SessionService:
             session_id: ID of the session to delete
             
         Returns:
-            bool: True if deleted successfully, False if not found
+            bool: True if deleted successfully
+            
+        Raises:
+            HTTPException: 404 if session not found
         """
         logger.info(f"Attempting to delete session: {session_id}")
-        result = self._session_repo.delete(session_id)
         
-        if result:
-            logger.info(f"Session {session_id} deleted successfully")
-        else:
+        # Check if session exists
+        session = self._session_repo.get_by_id(session_id)
+        if session is None:
             logger.warning(f"Session {session_id} not found for deletion")
+            raise HTTPException(status_code=404, detail="Session not found")
         
+        result = self._session_repo.delete(session_id)
+        logger.info(f"Session {session_id} deleted successfully")
         return result

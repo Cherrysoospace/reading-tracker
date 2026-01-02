@@ -28,30 +28,44 @@ class StatsService:
         self._session_repo = session_repo
         self._book_repo = book_repo
     
-    def get_total_time_read(self) -> int:
+    def get_total_time_read(self, year: Optional[int] = None) -> int:
         """
-        Calculate total reading time across all sessions.
+        Calculate total reading time across all sessions or for a specific year.
+        
+        Args:
+            year: Optional year to filter sessions (e.g., 2025). If None, returns total for all years.
         
         Returns:
-            int: Total minutes read across all sessions, 0 if no sessions
+            int: Total minutes read across filtered sessions, 0 if no sessions
         """
-        logger.debug("Calculating total time read")
-        sessions = self._session_repo.get_all()
+        logger.debug(f"Calculating total time read{f' for year {year}' if year else ''}")
+        
+        if year is not None:
+            sessions = self._session_repo.get_by_year(year)
+        else:
+            sessions = self._session_repo.get_all()
         
         total_minutes = sum(session.get_minutes_read() for session in sessions)
         logger.info(f"Total time read: {total_minutes} minutes from {len(sessions)} sessions")
         return total_minutes
     
-    def get_daily_stats(self) -> Dict[str, int]:
+    def get_daily_stats(self, year: Optional[int] = None) -> Dict[str, int]:
         """
-        Get reading statistics grouped by date.
+        Get reading statistics grouped by date, optionally filtered by year.
+        
+        Args:
+            year: Optional year to filter sessions (e.g., 2025). If None, returns stats for all years.
         
         Returns:
             Dict[str, int]: Dictionary mapping date strings (YYYY-MM-DD) to total minutes,
                            empty dict if no sessions
         """
-        logger.debug("Calculating daily stats")
-        sessions = self._session_repo.get_all()
+        logger.debug(f"Calculating daily stats{f' for year {year}' if year else ''}")
+        
+        if year is not None:
+            sessions = self._session_repo.get_by_year(year)
+        else:
+            sessions = self._session_repo.get_all()
         
         daily_totals = defaultdict(int)
         for session in sessions:
@@ -68,16 +82,19 @@ class StatsService:
         logger.info(f"Daily stats calculated for {len(result)} days")
         return result
     
-    def get_time_by_book(self) -> Dict[str, Dict[str, Any]]:
+    def get_time_by_book(self, year: Optional[int] = None) -> Dict[str, Dict[str, Any]]:
         """
-        Get reading time statistics grouped by book.
+        Get reading time statistics grouped by book, optionally filtered by year.
+        
+        Args:
+            year: Optional year to filter sessions (e.g., 2025). If None, returns stats for all years.
         
         Returns:
             Dict[str, Dict[str, Any]]: Dictionary mapping book_id to book info with total minutes
                                        Format: {book_id: {"title": str, "author": str, "total_minutes": int}}
                                        Empty dict if no sessions
         """
-        logger.debug("Calculating time by book")
+        logger.debug(f"Calculating time by book{f' for year {year}' if year else ''}")
         sessions_with_books = self._session_repo.get_all_sessions_with_books()
         
         book_stats = defaultdict(lambda: {"title": "", "author": "", "total_minutes": 0})
@@ -85,6 +102,15 @@ class StatsService:
         for session in sessions_with_books:
             # session tuple: (session_id, book_id, date, minutes_read, title, author)
             session_id, book_id, session_date, minutes_read, title, author = session
+            
+            # Filter by year if specified
+            if year is not None:
+                if isinstance(session_date, str):
+                    if not session_date.startswith(str(year)):
+                        continue
+                elif isinstance(session_date, date):
+                    if session_date.year != year:
+                        continue
             
             book_stats[str(book_id)]["title"] = title
             book_stats[str(book_id)]["author"] = author if author else ""
@@ -94,16 +120,19 @@ class StatsService:
         logger.info(f"Time by book calculated for {len(result)} books")
         return result
     
-    def get_most_read_book(self) -> Optional[Dict[str, Any]]:
+    def get_most_read_book(self, year: Optional[int] = None) -> Optional[Dict[str, Any]]:
         """
-        Find the book with the most reading time.
+        Find the book with the most reading time, optionally filtered by year.
+        
+        Args:
+            year: Optional year to filter sessions (e.g., 2025). If None, considers all years.
         
         Returns:
             Optional[Dict[str, Any]]: Dictionary with book_id, title, author, and total_minutes,
                                      None if no sessions exist
         """
-        logger.debug("Finding most read book")
-        time_by_book = self.get_time_by_book()
+        logger.debug(f"Finding most read book{f' for year {year}' if year else ''}")
+        time_by_book = self.get_time_by_book(year)
         
         if not time_by_book:
             logger.info("No reading sessions found")
@@ -267,15 +296,18 @@ class StatsService:
         logger.info(f"Maximum reading streak ever: {max_streak} days")
         return max_streak
     
-    def get_most_read_author(self) -> Optional[str]:
+    def get_most_read_author(self, year: Optional[int] = None) -> Optional[str]:
         """
-        Find the author with the most total reading time.
+        Find the author with the most total reading time, optionally filtered by year.
+        
+        Args:
+            year: Optional year to filter sessions (e.g., 2025). If None, considers all years.
         
         Returns:
             Optional[str]: Author name with most reading minutes,
                           None if no sessions or all authors are empty/null
         """
-        logger.debug("Finding most read author")
+        logger.debug(f"Finding most read author{f' for year {year}' if year else ''}")
         sessions_with_books = self._session_repo.get_all_sessions_with_books()
         
         if not sessions_with_books:
@@ -287,6 +319,15 @@ class StatsService:
         for session in sessions_with_books:
             # session tuple: (session_id, book_id, date, minutes_read, title, author)
             session_id, book_id, session_date, minutes_read, title, author = session
+            
+            # Filter by year if specified
+            if year is not None:
+                if isinstance(session_date, str):
+                    if not session_date.startswith(str(year)):
+                        continue
+                elif isinstance(session_date, date):
+                    if session_date.year != year:
+                        continue
             
             # Skip empty/null authors
             if author and author.strip():
@@ -301,12 +342,15 @@ class StatsService:
         logger.info(f"Most read author: '{most_read_author}' with {author_totals[most_read_author]} minutes")
         return most_read_author
     
-    def get_summary_stats(self) -> Dict[str, Any]:
+    def get_summary_stats(self, year: Optional[int] = None) -> Dict[str, Any]:
         """
-        Get comprehensive summary of all reading statistics.
+        Get comprehensive summary of all reading statistics, optionally filtered by year.
         
         Combines all statistical methods into a single comprehensive report
         useful for dashboard displays.
+        
+        Args:
+            year: Optional year to filter sessions (e.g., 2025). If None, returns stats for all years.
         
         Returns:
             Dict[str, Any]: Dictionary containing all statistics:
@@ -320,15 +364,15 @@ class StatsService:
                 - current_streak: Current consecutive days streak
                 - max_streak: Maximum streak ever achieved
         """
-        logger.info("Generating summary statistics")
+        logger.info(f"Generating summary statistics{f' for year {year}' if year else ''}")
         
         summary = {
-            "total_minutes_read": self.get_total_time_read(),
+            "total_minutes_read": self.get_total_time_read(year),
             "books_finished": self.get_books_finished_count(),
-            "daily_stats": self.get_daily_stats(),
-            "book_stats": self.get_time_by_book(),
-            "most_read_book": self.get_most_read_book(),
-            "most_read_author": self.get_most_read_author(),
+            "daily_stats": self.get_daily_stats(year),
+            "book_stats": self.get_time_by_book(year),
+            "most_read_book": self.get_most_read_book(year),
+            "most_read_author": self.get_most_read_author(year),
             "books_finished_by_year": self.get_books_finished_by_year(),
             "current_streak": self.calculate_current_streak(),
             "max_streak": self.calculate_max_streak()

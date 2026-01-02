@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from typing import Dict, List, Any, Optional
 
 from ..services.StatsService import StatsService
@@ -21,26 +21,26 @@ logger = get_logger(__name__)
 router = APIRouter(prefix="/stats", tags=["Statistics"])
 
 
-def get_stats_service() -> StatsService:
+def get_stats_service():
     """
     Dependency function to create and return a StatsService instance.
     
-    Initializes the database connection and required repositories,
-    then creates and returns a StatsService instance.
+    Uses context manager to ensure database connections are properly closed
+    after each request, preventing memory leaks.
     
-    Returns:
+    Yields:
         StatsService: Configured StatsService instance
     """
-    # Initialize database connection
-    db_connection = DatabaseConnection()
-    db_connection.initialize_database()
-    
-    # Initialize repositories
-    session_repo = SessionRepository(db_connection)
-    book_repo = BookRepository(db_connection)
-    
-    # Create and return StatsService
-    return StatsService(session_repo, book_repo)
+    # Use context manager to ensure connection is closed
+    with DatabaseConnection() as db_connection:
+        db_connection.initialize_database()
+        
+        # Initialize repositories
+        session_repo = SessionRepository(db_connection)
+        book_repo = BookRepository(db_connection)
+        
+        # Create and yield StatsService
+        yield StatsService(session_repo, book_repo)
 
 
 def format_daily_stats(stats_dict: Dict[str, int]) -> List[DailyStatsResponse]:
@@ -85,22 +85,24 @@ def format_book_stats(stats_dict: Dict[str, Dict[str, Any]]) -> List[BookStatsRe
     "/summary",
     response_model=SummaryStatsResponse,
     summary="Get complete statistics summary",
-    description="Retrieve all reading statistics including totals, streaks, books, and daily data"
+    description="Retrieve all reading statistics including totals, streaks, books, and daily data. Optionally filter by year."
 )
 def get_summary_stats(
+    year: Optional[int] = Query(None, description="Filter statistics by year (e.g., 2025). If not provided, returns all data."),
     stats_service: StatsService = Depends(get_stats_service)
 ) -> SummaryStatsResponse:
     """
     Get comprehensive summary of all reading statistics.
     
     Args:
+        year: Optional year to filter statistics
         stats_service: StatsService dependency
         
     Returns:
         SummaryStatsResponse: Complete statistics summary
     """
-    logger.info("GET /stats/summary")
-    summary = stats_service.get_summary_stats()
+    logger.info(f"GET /stats/summary{f'?year={year}' if year else ''}")
+    summary = stats_service.get_summary_stats(year)
     
     # Convert nested dicts to proper response objects
     daily_stats = format_daily_stats(summary["daily_stats"])
@@ -134,27 +136,29 @@ def get_summary_stats(
     "/basic",
     response_model=BasicStatsResponse,
     summary="Get basic statistics",
-    description="Quick overview of key reading statistics for dashboard widgets"
+    description="Quick overview of key reading statistics for dashboard widgets. Optionally filter by year."
 )
 def get_basic_stats(
+    year: Optional[int] = Query(None, description="Filter statistics by year (e.g., 2025). If not provided, returns all data."),
     stats_service: StatsService = Depends(get_stats_service)
 ) -> BasicStatsResponse:
     """
     Get basic reading statistics for quick overview.
     
     Args:
+        year: Optional year to filter statistics
         stats_service: StatsService dependency
         
     Returns:
         BasicStatsResponse: Essential statistics
     """
-    logger.info("GET /stats/basic")
+    logger.info(f"GET /stats/basic{f'?year={year}' if year else ''}")
     
     return BasicStatsResponse(
-        total_minutes_read=stats_service.get_total_time_read(),
+        total_minutes_read=stats_service.get_total_time_read(year),
         books_finished=stats_service.get_books_finished_count(),
         current_streak=stats_service.calculate_current_streak(),
-        most_read_author=stats_service.get_most_read_author()
+        most_read_author=stats_service.get_most_read_author(year)
     )
 
 
@@ -162,22 +166,24 @@ def get_basic_stats(
     "/daily",
     response_model=List[DailyStatsResponse],
     summary="Get daily reading statistics",
-    description="Get total minutes read for each day"
+    description="Get total minutes read for each day. Optionally filter by year."
 )
 def get_daily_stats(
+    year: Optional[int] = Query(None, description="Filter statistics by year (e.g., 2025). If not provided, returns all data."),
     stats_service: StatsService = Depends(get_stats_service)
 ) -> List[DailyStatsResponse]:
     """
     Get daily reading statistics.
     
     Args:
+        year: Optional year to filter statistics
         stats_service: StatsService dependency
         
     Returns:
         List[DailyStatsResponse]: Daily statistics sorted by date (most recent first)
     """
-    logger.info("GET /stats/daily")
-    daily_stats_dict = stats_service.get_daily_stats()
+    logger.info(f"GET /stats/daily{f'?year={year}' if year else ''}")
+    daily_stats_dict = stats_service.get_daily_stats(year)
     return format_daily_stats(daily_stats_dict)
 
 
@@ -185,22 +191,24 @@ def get_daily_stats(
     "/books",
     response_model=List[BookStatsResponse],
     summary="Get reading statistics by book",
-    description="Get total minutes read for each book, sorted by reading time"
+    description="Get total minutes read for each book, sorted by reading time. Optionally filter by year."
 )
 def get_book_stats(
+    year: Optional[int] = Query(None, description="Filter statistics by year (e.g., 2025). If not provided, returns all data."),
     stats_service: StatsService = Depends(get_stats_service)
 ) -> List[BookStatsResponse]:
     """
     Get reading statistics by book.
     
     Args:
+        year: Optional year to filter statistics
         stats_service: StatsService dependency
         
     Returns:
         List[BookStatsResponse]: Book statistics sorted by total minutes (descending)
     """
-    logger.info("GET /stats/books")
-    book_stats_dict = stats_service.get_time_by_book()
+    logger.info(f"GET /stats/books{f'?year={year}' if year else ''}")
+    book_stats_dict = stats_service.get_time_by_book(year)
     return format_book_stats(book_stats_dict)
 
 
@@ -234,22 +242,24 @@ def get_streak_stats(
     "/most-read-book",
     response_model=Optional[BookStatsResponse],
     summary="Get most read book",
-    description="Get the book with the most reading time"
+    description="Get the book with the most reading time. Optionally filter by year."
 )
 def get_most_read_book(
+    year: Optional[int] = Query(None, description="Filter statistics by year (e.g., 2025). If not provided, returns all data."),
     stats_service: StatsService = Depends(get_stats_service)
 ) -> Optional[BookStatsResponse]:
     """
     Get the book with most reading time.
     
     Args:
+        year: Optional year to filter statistics
         stats_service: StatsService dependency
         
     Returns:
         Optional[BookStatsResponse]: Most read book or None if no sessions
     """
-    logger.info("GET /stats/most-read-book")
-    most_read = stats_service.get_most_read_book()
+    logger.info(f"GET /stats/most-read-book{f'?year={year}' if year else ''}")
+    most_read = stats_service.get_most_read_book(year)
     
     if most_read is None:
         return None
@@ -261,22 +271,24 @@ def get_most_read_book(
     "/most-read-author",
     response_model=Dict[str, Optional[str]],
     summary="Get most read author",
-    description="Get the author with the most total reading time"
+    description="Get the author with the most total reading time. Optionally filter by year."
 )
 def get_most_read_author(
+    year: Optional[int] = Query(None, description="Filter statistics by year (e.g., 2025). If not provided, returns all data."),
     stats_service: StatsService = Depends(get_stats_service)
 ) -> Dict[str, Optional[str]]:
     """
     Get the author with most total reading time.
     
     Args:
+        year: Optional year to filter statistics
         stats_service: StatsService dependency
         
     Returns:
         Dict[str, Optional[str]]: Dictionary with author name or None
     """
-    logger.info("GET /stats/most-read-author")
-    author = stats_service.get_most_read_author()
+    logger.info(f"GET /stats/most-read-author{f'?year={year}' if year else ''}")
+    author = stats_service.get_most_read_author(year)
     return {"author": author}
 
 
@@ -336,22 +348,24 @@ def get_books_finished_by_year(
     "/total-time",
     response_model=Dict[str, Any],
     summary="Get total reading time",
-    description="Get total time spent reading across all sessions"
+    description="Get total time spent reading across all sessions. Optionally filter by year."
 )
 def get_total_time(
+    year: Optional[int] = Query(None, description="Filter statistics by year (e.g., 2025). If not provided, returns all data."),
     stats_service: StatsService = Depends(get_stats_service)
 ) -> Dict[str, Any]:
     """
     Get total reading time in minutes and hours.
     
     Args:
+        year: Optional year to filter statistics
         stats_service: StatsService dependency
         
     Returns:
         Dict[str, Any]: Total minutes and hours
     """
-    logger.info("GET /stats/total-time")
-    total_minutes = stats_service.get_total_time_read()
+    logger.info(f"GET /stats/total-time{f'?year={year}' if year else ''}")
+    total_minutes = stats_service.get_total_time_read(year)
     total_hours = round(total_minutes / 60, 2)
     
     return {

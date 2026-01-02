@@ -1,5 +1,5 @@
 from typing import List, Optional
-from datetime import date
+from datetime import date, datetime
 from fastapi import HTTPException
 
 from ..repositories.BookRepository import BookRepository
@@ -28,6 +28,20 @@ class BookService:
         """
         self._book_repo = book_repo
         self._session_repo = session_repo
+    
+    def _parse_date_string(self, date_value: any) -> date:
+        """
+        Convert string date to date object if needed.
+        
+        Args:
+            date_value: Either a string in YYYY-MM-DD format or a date object
+            
+        Returns:
+            date: Date object
+        """
+        if isinstance(date_value, str):
+            return datetime.strptime(date_value, '%Y-%m-%d').date()
+        return date_value
     
     def create_book(self, title: str, author: str, start_date: date) -> Book:
         """
@@ -162,12 +176,7 @@ class BookService:
         
         if end_date is not None:
             # Validate end_date is not before start_date
-            book_start_date = book.get_start_date()
-            
-            # Convert start_date to date object if it's a string
-            if isinstance(book_start_date, str):
-                from datetime import datetime
-                book_start_date = datetime.strptime(book_start_date, '%Y-%m-%d').date()
+            book_start_date = self._parse_date_string(book.get_start_date())
             
             if end_date < book_start_date:
                 logger.warning(f"Book {book_id} update failed: end_date {end_date} before start_date {book_start_date}")
@@ -207,12 +216,7 @@ class BookService:
         book = self.get_book(book_id)
         
         # Validate end_date is not before start_date
-        book_start_date = book.get_start_date()
-        
-        # Convert start_date to date object if it's a string
-        if isinstance(book_start_date, str):
-            from datetime import datetime
-            book_start_date = datetime.strptime(book_start_date, '%Y-%m-%d').date()
+        book_start_date = self._parse_date_string(book.get_start_date())
         
         if end_date < book_start_date:
             logger.warning(f"Mark as finished failed for book {book_id}: end_date {end_date} before start_date {book_start_date}")
@@ -251,11 +255,9 @@ class BookService:
         # Check if book exists
         book = self.get_book(book_id)
         
-        # Check if book has associated sessions
-        sessions = self._session_repo.get_by_book(book_id)
-        
-        if sessions:
-            logger.warning(f"Book {book_id} deletion failed: has {len(sessions)} reading sessions")
+        # Check if book has associated sessions (optimized with COUNT query)
+        if self._book_repo.has_sessions(book_id):
+            logger.warning(f"Book {book_id} deletion failed: has reading sessions")
             raise HTTPException(
                 status_code=400,
                 detail="Cannot delete book with reading sessions"

@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 import uvicorn
 
 from .routers import book_router, session_router, stats_router
@@ -10,13 +11,43 @@ from .core.logging import get_logger, setup_logging
 setup_logging(level="INFO")
 logger = get_logger(__name__)
 
-# Create FastAPI application
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Lifespan context manager for FastAPI application.
+    
+    Handles startup and shutdown events using the modern lifespan approach
+    instead of deprecated @app.on_event decorators.
+    """
+    # Startup
+    try:
+        logger.info("Starting Reading Tracker API...")
+        db = DatabaseConnection()
+        db.initialize_database()
+        db.close()  # Close after initialization
+        logger.info("Database initialized successfully")
+        logger.info("Reading Tracker API is ready!")
+        logger.info("API documentation available at: http://localhost:8000/docs")
+    except Exception as e:
+        logger.error(f"Failed to initialize database: {e}")
+        raise
+    
+    yield  # Application runs here
+    
+    # Shutdown
+    logger.info("Shutting down Reading Tracker API...")
+    logger.info("Goodbye!")
+
+
+# Create FastAPI application with lifespan
 app = FastAPI(
     title="Reading Tracker API",
     description="API for tracking reading sessions and statistics",
     version="1.0.0",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
+    lifespan=lifespan
 )
 
 # Configure CORS middleware
@@ -37,37 +68,6 @@ app.add_middleware(
 app.include_router(book_router.router)
 app.include_router(session_router.router)
 app.include_router(stats_router.router)
-
-
-@app.on_event("startup")
-async def startup_event():
-    """
-    Initialize database on application startup.
-    
-    Creates database tables if they don't exist and ensures
-    the application is ready to handle requests.
-    """
-    try:
-        logger.info("Starting Reading Tracker API...")
-        db = DatabaseConnection()
-        db.initialize_database()
-        logger.info("Database initialized successfully")
-        logger.info("Reading Tracker API is ready!")
-        logger.info("API documentation available at: http://localhost:8000/docs")
-    except Exception as e:
-        logger.error(f"Failed to initialize database: {e}")
-        raise
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """
-    Cleanup on application shutdown.
-    
-    Performs any necessary cleanup operations before the application stops.
-    """
-    logger.info("Shutting down Reading Tracker API...")
-    logger.info("Goodbye!")
 
 
 @app.get("/", tags=["Root"])

@@ -1,0 +1,30 @@
+:root {
+  --kawaii-pink: #ffcce5;
+  --kawaii-blue: #cce5ff;
+  --kawaii-purple: #e5ccff;
+  --kawaii-yellow: #fff9c4;
+  --text-color: #5d5d5d;
+}
+
+body {
+  background-color: var(--kawaii-yellow);
+  font-family: 'Comic Sans MS', 'Chalkboard SE', cursive; /* O una fuente similar de Google Fonts */
+  color: var(--text-color);
+}
+
+.card {
+  border-radius: 20px; /* Bordes muy redondos */
+  border: 3px solid white;
+  box-shadow: 5px 5px 0px var(--kawaii-pink); /* Sombra tipo sticker */
+}
+
+.btn-kawaii {
+  background-color: var(--kawaii-pink);
+  border-radius: 15px;
+  border: none;
+  transition: transform 0.2s;
+}
+
+.btn-kawaii:hover {
+  transform: scale(1.1); /* Efecto burbuja */
+}

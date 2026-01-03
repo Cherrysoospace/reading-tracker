@@ -10,7 +10,8 @@ from ..schemas.stats_schemas import (
     StreakStatsResponse,
     BookStatsResponse,
     DailyStatsResponse,
-    YearlyBooksResponse
+    YearlyBooksResponse,
+    WrappedStatsResponse
 )
 from ..core.database import DatabaseConnection
 from ..core.logging import get_logger
@@ -372,3 +373,92 @@ def get_total_time(
         "total_minutes": total_minutes,
         "total_hours": total_hours
     }
+
+
+@router.get(
+    "/books-read-in-year/{year}",
+    response_model=Dict[str, int],
+    summary="Get count of books read in a specific year",
+    description="Count unique books that had at least one reading session in the specified year (regardless of whether they were finished)"
+)
+def get_books_read_in_year(
+    year: int,
+    stats_service: StatsService = Depends(get_stats_service)
+) -> Dict[str, int]:
+    """
+    Get count of unique books read in a specific year.
+    
+    This counts any book that had reading activity in the year,
+    different from books-finished which only counts completed books.
+    
+    Args:
+        year: Year to count books for (e.g., 2025)
+        stats_service: StatsService dependency
+        
+    Returns:
+        Dict[str, int]: Dictionary with books_read count and year
+    """
+    logger.info(f"GET /stats/books-read-in-year/{year}")
+    count = stats_service.get_books_read_in_year(year)
+    
+    return {
+        "year": year,
+        "books_read": count
+    }
+
+
+@router.get(
+    "/wrapped/{year}",
+    response_model=WrappedStatsResponse,
+    summary="Get Spotify Wrapped style annual summary",
+    description="Get comprehensive reading statistics for a specific year in a Spotify Wrapped style format. Perfect for annual reading recaps!"
+)
+def get_wrapped_stats(
+    year: int,
+    stats_service: StatsService = Depends(get_stats_service)
+) -> WrappedStatsResponse:
+    """
+    Get comprehensive "Spotify Wrapped" style summary for a specific year.
+    
+    Returns all key reading metrics for the year including:
+    - Total time read
+    - Books read and finished
+    - Reading streaks and patterns
+    - Top books and authors
+    - Reading habits analysis
+    
+    Args:
+        year: Year to generate wrapped summary for (e.g., 2025)
+        stats_service: StatsService dependency
+        
+    Returns:
+        WrappedStatsResponse: Comprehensive annual reading summary
+    """
+    logger.info(f"GET /stats/wrapped/{year}")
+    wrapped_data = stats_service.get_wrapped_stats(year)
+    
+    # Convert most_read_book dict to response object if exists
+    most_read_book = None
+    if wrapped_data["most_read_book"]:
+        most_read_book = BookStatsResponse(**wrapped_data["most_read_book"])
+    
+    # Convert top_books list to response objects
+    top_books = [
+        BookStatsResponse(**book_data)
+        for book_data in wrapped_data["top_books"]
+    ]
+    
+    return WrappedStatsResponse(
+        year=wrapped_data["year"],
+        total_minutes_read=wrapped_data["total_minutes_read"],
+        total_hours_read=wrapped_data["total_hours_read"],
+        books_read=wrapped_data["books_read"],
+        books_finished_in_year=wrapped_data["books_finished_in_year"],
+        days_read=wrapped_data["days_read"],
+        average_minutes_per_day=wrapped_data["average_minutes_per_day"],
+        most_read_book=most_read_book,
+        most_read_author=wrapped_data["most_read_author"],
+        longest_session=wrapped_data["longest_session"],
+        current_streak=wrapped_data["current_streak"],
+        top_books=top_books
+    )

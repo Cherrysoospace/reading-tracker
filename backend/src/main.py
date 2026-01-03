@@ -56,11 +56,16 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "http://localhost:5173",
+        "http://localhost:5500",  # Live Server default port
+        "http://localhost:8080",  # Alternative port
         "http://127.0.0.1:3000",
-        "http://127.0.0.1:5173"
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:5500",  # Live Server default port
+        "http://127.0.0.1:8080",  # Alternative port
+        "*"  # Permitir todos los orígenes (solo para desarrollo)
     ],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 

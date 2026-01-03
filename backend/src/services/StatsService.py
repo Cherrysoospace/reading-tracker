@@ -198,17 +198,60 @@ class StatsService:
         logger.info(f"Books finished by year: {result}")
         return result
     
-    def calculate_current_streak(self) -> int:
+    def get_books_read_in_year(self, year: int) -> int:
         """
-        Calculate the current reading streak (consecutive days with sessions).
+        Count the number of unique books that were read (had at least one session) in a specific year.
         
-        Starts from today and counts backwards until finding a day without sessions.
+        This is different from get_books_finished_count() which only counts books with status='finished'.
+        This function counts any book that had reading activity in the specified year,
+        regardless of whether it was finished or not.
+        
+        Args:
+            year: Year to count books for (e.g., 2025)
         
         Returns:
-            int: Number of consecutive days with reading sessions from today,
-                 0 if no session today or yesterday
+            int: Number of unique books with reading sessions in the specified year, 0 if none
         """
-        logger.debug("Calculating current reading streak")
+        logger.debug(f"Counting unique books read in year {year}")
+        sessions_with_books = self._session_repo.get_all_sessions_with_books()
+        
+        if not sessions_with_books:
+            logger.info("No reading sessions found")
+            return 0
+        
+        # Use a set to store unique book IDs that were read in the specified year
+        books_read = set()
+        
+        for session in sessions_with_books:
+            # session tuple: (session_id, book_id, date, minutes_read, title, author)
+            session_id, book_id, session_date, minutes_read, title, author = session
+            
+            # Filter by year
+            if isinstance(session_date, str):
+                if session_date.startswith(str(year)):
+                    books_read.add(book_id)
+            elif isinstance(session_date, date):
+                if session_date.year == year:
+                    books_read.add(book_id)
+        
+        count = len(books_read)
+        logger.info(f"Books read in {year}: {count} unique books")
+        return count
+    
+    def calculate_current_streak(self) -> int:
+        """
+        Calculate the current active reading streak (consecutive days with sessions).
+        
+        This function implements Duolingo-style streak logic:
+        - If you read today or yesterday, the streak continues (you have today to maintain it)
+        - If the last reading session was 2+ days ago, the streak is broken (resets to 0)
+        - Counts backwards from the most recent session until finding a gap
+        
+        Returns:
+            int: Number of consecutive days with reading sessions in the current active streak,
+                 0 if streak is broken (last session was 2+ days ago)
+        """
+        logger.debug("Calculating current reading streak (Duolingo-style)")
         sessions = self._session_repo.get_all()
         
         if not sessions:
@@ -226,22 +269,32 @@ class StatsService:
             
             unique_dates.add(session_date)
         
-        # Start counting from today backwards
-        today = date.today()
-        current_date = today
-        streak = 0
-        
-        # Check if there's a session today or yesterday to start counting
-        if today not in unique_dates and (today - timedelta(days=1)) not in unique_dates:
-            logger.info("No session today or yesterday, current streak is 0")
+        if not unique_dates:
+            logger.info("No valid dates found, current streak is 0")
             return 0
         
-        # Count consecutive days
+        # Find the most recent session date
+        most_recent_date = max(unique_dates)
+        today = date.today()
+        
+        # Calculate days since last session
+        days_since_last_session = (today - most_recent_date).days
+        
+        # Streak is broken if last session was more than 1 day ago
+        # (Today = 0 days, Yesterday = 1 day is still valid)
+        if days_since_last_session > 1:
+            logger.info(f"Streak broken: last session was {days_since_last_session} days ago on {most_recent_date}")
+            return 0
+        
+        # Count consecutive days backwards from the most recent session
+        streak = 0
+        current_date = most_recent_date
+        
         while current_date in unique_dates:
             streak += 1
             current_date -= timedelta(days=1)
         
-        logger.info(f"Current reading streak: {streak} days")
+        logger.info(f"Current reading streak: {streak} days (last session: {most_recent_date})")
         return streak
     
     def calculate_max_streak(self) -> int:
@@ -369,6 +422,7 @@ class StatsService:
         summary = {
             "total_minutes_read": self.get_total_time_read(year),
             "books_finished": self.get_books_finished_count(),
+            "books_read_in_year": self.get_books_read_in_year(year) if year else None,
             "daily_stats": self.get_daily_stats(year),
             "book_stats": self.get_time_by_book(year),
             "most_read_book": self.get_most_read_book(year),
@@ -380,3 +434,92 @@ class StatsService:
         
         logger.info("Summary statistics generated successfully")
         return summary
+    
+    def get_wrapped_stats(self, year: int) -> Dict[str, Any]:
+        """
+        Generate a comprehensive "Spotify Wrapped" style summary for a specific year.
+        
+        This method provides all key metrics for the year in a format optimized
+        for displaying an annual reading summary similar to Spotify Wrapped.
+        
+        Args:
+            year: Year to generate wrapped stats for (e.g., 2025)
+        
+        Returns:
+            Dict[str, Any]: Dictionary containing comprehensive year statistics:
+                - year: The year for this wrapped summary
+                - total_minutes_read: Total reading time in the year
+                - total_hours_read: Total reading time converted to hours
+                - books_read: Number of unique books read in the year
+                - books_finished_in_year: Number of books finished in the year
+                - days_read: Number of unique days with reading sessions
+                - average_minutes_per_day: Average reading time per active day
+                - most_read_book: Book with most reading time in the year
+                - most_read_author: Author with most reading time in the year
+                - longest_session: Longest single reading session in the year
+                - current_streak: Current active reading streak (if applicable)
+                - top_books: Top 5 books by reading time in the year
+        """
+        logger.info(f"Generating Wrapped statistics for year {year}")
+        
+        # Get basic metrics filtered by year
+        total_minutes = self.get_total_time_read(year)
+        books_read = self.get_books_read_in_year(year)
+        most_read_book = self.get_most_read_book(year)
+        most_read_author = self.get_most_read_author(year)
+        daily_stats = self.get_daily_stats(year)
+        book_stats = self.get_time_by_book(year)
+        
+        # Calculate books finished in this specific year
+        books_finished_by_year = self.get_books_finished_by_year()
+        books_finished_in_year = books_finished_by_year.get(year, 0)
+        
+        # Calculate days read (unique days with sessions)
+        days_read = len(daily_stats)
+        
+        # Calculate average minutes per active reading day
+        average_minutes_per_day = round(total_minutes / days_read, 1) if days_read > 0 else 0
+        
+        # Find longest single reading session in the year
+        sessions = self._session_repo.get_by_year(year)
+        longest_session = max((session.get_minutes_read() for session in sessions), default=0)
+        
+        # Get top 5 books by reading time
+        top_books = []
+        if book_stats:
+            sorted_books = sorted(
+                book_stats.items(),
+                key=lambda x: x[1]["total_minutes"],
+                reverse=True
+            )[:5]
+            
+            top_books = [
+                {
+                    "book_id": int(book_id),
+                    "title": book_data["title"],
+                    "author": book_data["author"],
+                    "total_minutes": book_data["total_minutes"]
+                }
+                for book_id, book_data in sorted_books
+            ]
+        
+        # Get current streak (only if still active)
+        current_streak = self.calculate_current_streak()
+        
+        wrapped_stats = {
+            "year": year,
+            "total_minutes_read": total_minutes,
+            "total_hours_read": round(total_minutes / 60, 1),
+            "books_read": books_read,
+            "books_finished_in_year": books_finished_in_year,
+            "days_read": days_read,
+            "average_minutes_per_day": average_minutes_per_day,
+            "most_read_book": most_read_book,
+            "most_read_author": most_read_author,
+            "longest_session": longest_session,
+            "current_streak": current_streak,
+            "top_books": top_books
+        }
+        
+        logger.info(f"Wrapped statistics for {year} generated successfully")
+        return wrapped_stats

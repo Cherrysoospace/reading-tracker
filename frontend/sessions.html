@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Registro de Sesiones - Reading Tracker Kawaii">
+    <title>⏱️ Sesiones de Lectura - Reading Tracker</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Tabulator CSS -->
+    <link href="https://unpkg.com/tabulator-tables@6.2.1/dist/css/tabulator.min.css" rel="stylesheet">
+    
+    <!-- Google Fonts - Quicksand -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    
+    <!-- Navbar Kawaii -->
+    <nav class="navbar navbar-expand-lg sticky-top shadow-sm mb-4" style="background-color: var(--kawaii-pink); border-bottom: 3px solid white;">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" href="index.html" style="color: var(--text-color); font-size: 1.3rem;">
+                📚 Reading Tracker
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
+                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation"
+                    style="border: 2px solid white; border-radius: 10px;">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link px-3" href="index.html" style="border-radius: 10px; font-weight: 500;">
+                            🏠 Inicio
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-3" href="books.html" style="border-radius: 10px; font-weight: 500;">
+                            📖 Mis Libros
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active px-3" href="sessions.html" style="border-radius: 10px; font-weight: 500;">
+                            ⏱️ Sesiones
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link px-3" href="stats.html" style="border-radius: 10px; font-weight: 500;">
+                            📊 Estadísticas
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container my-5">
+        
+        <!-- Header Section -->
+        <section class="header-section text-center mb-4">
+            <h1 class="display-5 fw-bold mb-3" style="color: var(--text-color);">
+                ⏱️ Mis Sesiones de Lectura
+            </h1>
+            <p class="lead text-muted mb-4">
+                Registra y visualiza tu historial de lectura ✨
+            </p>
+            
+            <!-- Botón para registrar sesión -->
+            <button type="button" class="btn btn-kawaii btn-lg" data-bs-toggle="modal" data-bs-target="#newSessionModal" 
+                    style="border-radius: 15px; padding: 12px 30px; font-weight: 600;">
+                ➕ Registrar Nueva Sesión
+            </button>
+        </section>
+
+        <!-- Filtros Section -->
+        <section class="filters-section mb-4">
+            <div class="card p-4 shadow" style="border-radius: 20px; border: 3px solid white; background-color: var(--kawaii-yellow);">
+                <h5 class="fw-bold mb-3" style="color: var(--text-color);">
+                    🔍 Filtrar Sesiones
+                </h5>
+                
+                <div class="row g-3">
+                    <!-- Filtro por Libro -->
+                    <div class="col-md-4">
+                        <label for="filterBookId" class="form-label fw-bold">Por Libro</label>
+                        <select class="form-select" id="filterBookId" style="border-radius: 10px; border: 2px solid white;">
+                            <option value="">Todos los libros</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Filtro por Rango de Fechas -->
+                    <div class="col-md-3">
+                        <label for="filterStartDate" class="form-label fw-bold">Desde</label>
+                        <input type="date" class="form-control" id="filterStartDate" 
+                               style="border-radius: 10px; border: 2px solid white;">
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <label for="filterEndDate" class="form-label fw-bold">Hasta</label>
+                        <input type="date" class="form-control" id="filterEndDate" 
+                               style="border-radius: 10px; border: 2px solid white;">
+                    </div>
+                    
+                    <!-- Botones de Filtro -->
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="button" class="btn btn-kawaii w-100" id="clearFiltersBtn"
+                                style="border-radius: 10px; font-weight: 600;">
+                            ✨ Limpiar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tabla de Sesiones -->
+        <section class="sessions-table-section">
+            <div class="card p-4 shadow" style="border-radius: 20px; border: 3px solid white; background-color: white;">
+                <div id="sessions-table"></div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Modal para Nueva Sesión -->
+    <div class="modal fade" id="newSessionModal" tabindex="-1" aria-labelledby="newSessionModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 20px; border: 3px solid white;">
+                <div class="modal-header" style="background-color: var(--kawaii-purple); border-top-left-radius: 17px; border-top-right-radius: 17px;">
+                    <h5 class="modal-title fw-bold" id="newSessionModalLabel">
+                        ⏱️ Registrar Sesión de Lectura
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="newSessionForm">
+                        <!-- Selector de Libro -->
+                        <div class="mb-3">
+                            <label for="sessionBookId" class="form-label fw-bold">
+                                Libro <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="sessionBookId" name="book_id" required
+                                    style="border-radius: 10px; border: 2px solid var(--kawaii-blue);">
+                                <option value="">Selecciona un libro...</option>
+                            </select>
+                            <div class="form-text">¿Qué libro leíste?</div>
+                        </div>
+
+                        <!-- Fecha de la Sesión -->
+                        <div class="mb-3">
+                            <label for="sessionDate" class="form-label fw-bold">
+                                Fecha <span class="text-danger">*</span>
+                            </label>
+                            <input type="date" class="form-control" id="sessionDate" name="date" required
+                                   style="border-radius: 10px; border: 2px solid var(--kawaii-blue);">
+                            <div class="form-text">¿Cuándo leíste?</div>
+                        </div>
+
+                        <!-- Minutos Leídos -->
+                        <div class="mb-3">
+                            <label for="sessionMinutes" class="form-label fw-bold">
+                                Minutos Leídos <span class="text-danger">*</span>
+                            </label>
+                            <input type="number" class="form-control" id="sessionMinutes" name="minutes_read" 
+                                   min="1" max="1440" required placeholder="Ej: 45"
+                                   style="border-radius: 10px; border: 2px solid var(--kawaii-blue);">
+                            <div class="form-text">¿Cuántos minutos leíste? (máx. 1440 = 24 horas)</div>
+                        </div>
+
+                        <div class="alert alert-info" style="border-radius: 10px; border: 2px solid var(--kawaii-blue);">
+                            <small>
+                                <strong>💡 Consejo:</strong> Registra tus sesiones diariamente para llevar un mejor seguimiento.
+                                Puedes registrar varias sesiones del mismo libro en diferentes fechas.
+                            </small>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer" style="border-bottom-left-radius: 17px; border-bottom-right-radius: 17px;">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" 
+                            style="border-radius: 10px;">
+                        ❌ Cancelar
+                    </button>
+                    <button type="button" class="btn btn-kawaii" id="saveSessionBtn"
+                            style="border-radius: 10px; font-weight: 600;">
+                        💾 Guardar Sesión
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer Kawaii -->
+    <footer class="text-center py-4 mt-5" style="background-color: var(--kawaii-pink); border-top: 3px solid white;">
+        <p class="mb-0" style="color: var(--text-color); font-weight: 500;">
+            ✨ Reading Tracker Kawaii 2026 ✨
+        </p>
+        <small style="color: var(--text-color);">Hecho con 💕 para los amantes de la lectura</small>
+    </footer>
+
+    <!-- Bootstrap 5 Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Tabulator JS -->
+    <script type="text/javascript" src="https://unpkg.com/tabulator-tables@6.2.1/dist/js/tabulator.min.js"></script>
+    
+    <!-- Main JavaScript Module -->
+    <script type="module" src="js/main.js"></script>
+    
+    <!-- Script para establecer fecha actual por defecto y máxima -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Establecer fecha máxima como hoy
+            const today = new Date().toISOString().split('T')[0];
+            
+            const sessionDateInput = document.getElementById('sessionDate');
+            if (sessionDateInput) {
+                sessionDateInput.max = today;
+                sessionDateInput.value = today;
+            }
+            
+            const filterStartDate = document.getElementById('filterStartDate');
+            if (filterStartDate) {
+                filterStartDate.max = today;
+            }
+            
+            const filterEndDate = document.getElementById('filterEndDate');
+            if (filterEndDate) {
+                filterEndDate.max = today;
+            }
+        });
+    </script>
+    
+    <!-- Estilos adicionales para la página -->
+    <style>
+        .nav-link {
+            transition: all 0.3s ease;
+        }
+        
+        .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .nav-link.active {
+            background-color: white !important;
+            color: var(--text-color) !important;
+        }
+
+        /* Estilos para Tabulator */
+        .tabulator {
+            border-radius: 15px;
+            border: none;
+            font-family: 'Quicksand', sans-serif;
+        }
+
+        .tabulator-header {
+            background-color: var(--kawaii-blue) !important;
+            border-radius: 15px 15px 0 0;
+        }
+
+        .tabulator-col {
+            border-right: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .tabulator-row {
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .tabulator-row:hover {
+            background-color: rgba(255, 249, 196, 0.3) !important;
+        }
+
+        /* Paginación kawaii */
+        .tabulator-footer {
+            border-radius: 0 0 15px 15px;
+            background-color: var(--kawaii-yellow) !important;
+        }
+
+        .tabulator-page {
+            border-radius: 8px;
+            margin: 0 2px;
+        }
+
+        .tabulator-page.active {
+            background-color: var(--kawaii-pink) !important;
+        }
+
+        /* Estilos para la sección de filtros */
+        .filters-section .form-label {
+            color: var(--text-color);
+            font-size: 0.9rem;
+        }
+    </style>
+
+</body>
+</html>

@@ -116,6 +116,7 @@ class SummaryStatsResponse(BaseModel):
                 "total_minutes_read": 2400,
                 "total_hours_read": 40.0,
                 "books_finished": 5,
+                "books_read_in_year": 8,
                 "current_streak": 7,
                 "max_streak": 15,
                 "most_read_book": {
@@ -177,6 +178,58 @@ class BasicStatsResponse(BaseModel):
                 "books_finished": 5,
                 "current_streak": 7,
                 "most_read_author": "Andrew Hunt"
+            }
+        }
+    }
+
+
+class WrappedStatsResponse(BaseModel):
+    """
+    Schema for "Spotify Wrapped" style annual reading summary.
+    
+    Contains comprehensive statistics for a specific year optimized
+    for displaying an engaging annual reading recap.
+    """
+    year: int = Field(..., description="Year for this wrapped summary")
+    total_minutes_read: int = Field(..., ge=0, description="Total minutes read in the year")
+    total_hours_read: float = Field(..., ge=0, description="Total hours read in the year")
+    books_read: int = Field(..., ge=0, description="Number of unique books read in the year")
+    books_finished_in_year: int = Field(..., ge=0, description="Number of books finished in the year")
+    days_read: int = Field(..., ge=0, description="Number of unique days with reading sessions")
+    average_minutes_per_day: float = Field(..., ge=0, description="Average reading minutes per active day")
+    most_read_book: Optional[BookStatsResponse] = Field(None, description="Book with most reading time in the year")
+    most_read_author: Optional[str] = Field(None, description="Author with most reading time in the year")
+    longest_session: int = Field(..., ge=0, description="Longest single reading session in minutes")
+    current_streak: int = Field(..., ge=0, description="Current active reading streak (if applicable)")
+    top_books: List[BookStatsResponse] = Field(default_factory=list, description="Top 5 books by reading time in the year")
+    
+    model_config = {
+        "json_schema_extra": {
+            "example": {
+                "year": 2025,
+                "total_minutes_read": 3600,
+                "total_hours_read": 60.0,
+                "books_read": 8,
+                "books_finished_in_year": 5,
+                "days_read": 120,
+                "average_minutes_per_day": 30.0,
+                "most_read_book": {
+                    "book_id": 1,
+                    "title": "The Pragmatic Programmer",
+                    "author": "Andrew Hunt",
+                    "total_minutes": 450
+                },
+                "most_read_author": "Andrew Hunt",
+                "longest_session": 120,
+                "current_streak": 7,
+                "top_books": [
+                    {
+                        "book_id": 1,
+                        "title": "The Pragmatic Programmer",
+                        "author": "Andrew Hunt",
+                        "total_minutes": 450
+                    }
+                ]
             }
         }
     }

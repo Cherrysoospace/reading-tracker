@@ -1,256 +1,262 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Gestión de libros - Reading Tracker Kawaii">
-    <title>📚 Mis Libros - Reading Tracker</title>
+    <title>Reading Tracker - Books</title>
     
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Tabulator CSS -->
-    <link href="https://unpkg.com/tabulator-tables@6.2.1/dist/css/tabulator.min.css" rel="stylesheet">
-    
-    <!-- Google Fonts - Quicksand -->
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="css/variables.css">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/tailwind-config.css">
+    <link rel="stylesheet" href="css/custom.css">
 </head>
-<body>
+<body class="font-['Inter']">
     
-    <!-- Navbar Kawaii -->
-    <nav class="navbar navbar-expand-lg sticky-top shadow-sm mb-4" style="background-color: var(--kawaii-pink); border-bottom: 3px solid white;">
-        <div class="container-fluid">
-            <a class="navbar-brand fw-bold" href="index.html" style="color: var(--text-color); font-size: 1.3rem;">
-                📚 Reading Tracker
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
-                    aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation"
-                    style="border: 2px solid white; border-radius: 10px;">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link px-3" href="index.html" style="border-radius: 10px; font-weight: 500;">
-                            🏠 Inicio
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active px-3" href="books.html" style="border-radius: 10px; font-weight: 500;">
-                            📖 Mis Libros
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link px-3" href="sessions.html" style="border-radius: 10px; font-weight: 500;">
-                            ⏱️ Sesiones
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link px-3" href="stats.html" style="border-radius: 10px; font-weight: 500;">
-                            📊 Estadísticas
-                        </a>
-                    </li>
-                </ul>
+    <!-- Navigation Bar -->
+    <nav class="glass-nav sticky top-0 z-40">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <!-- Logo/Brand -->
+                <div class="flex items-center space-x-3">
+                    <div class="text-3xl">📚</div>
+                    <h1 class="text-2xl font-bold text-gradient">Reading Tracker</h1>
+                </div>
+                
+                <!-- Navigation Links -->
+                <div class="flex items-center space-x-6">
+                    <a href="index.html" class="nav-link">
+                        <span class="text-lg">🏠</span>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="books.html" class="nav-link active">
+                        <span class="text-lg">📖</span>
+                        <span>Books</span>
+                    </a>
+                    <a href="sessions.html" class="nav-link">
+                        <span class="text-lg">⏱️</span>
+                        <span>Sessions</span>
+                    </a>
+                    <a href="stats.html" class="nav-link">
+                        <span class="text-lg">📊</span>
+                        <span>Statistics</span>
+                    </a>
+                </div>
             </div>
         </div>
     </nav>
 
     <!-- Main Content -->
-    <div class="container my-5">
+    <main class="container mx-auto px-6 py-8">
         
         <!-- Header Section -->
-        <section class="header-section text-center mb-4">
-            <h1 class="display-5 fw-bold mb-3" style="color: var(--text-color);">
-                📚 Mi Biblioteca Kawaii
-            </h1>
-            <p class="lead text-muted mb-4">
-                Gestiona todos tus libros en un solo lugar ✨
-            </p>
-            
-            <!-- Botón para añadir libro -->
-            <button type="button" class="btn btn-kawaii btn-lg" data-bs-toggle="modal" data-bs-target="#bookModal" 
-                    style="border-radius: 15px; padding: 12px 30px; font-weight: 600;">
-                ➕ Añadir Nuevo Libro
-            </button>
-        </section>
-
-        <!-- Tabla de Libros -->
-        <section class="books-table-section">
-            <div class="card p-4 shadow" style="border-radius: 20px; border: 3px solid white; background-color: white;">
-                <div id="books-table"></div>
+        <div class="flex items-center justify-between mb-8 animate-fade-in">
+            <div>
+                <h2 class="text-3xl font-bold mb-2">My Books</h2>
+                <p class="text-text-secondary">Manage your reading library</p>
             </div>
-        </section>
+            <button id="add-book-btn" class="btn btn-primary flex items-center space-x-2">
+                <span class="text-xl">➕</span>
+                <span>Add Book</span>
+            </button>
+        </div>
 
+        <!-- Filter/Search Section -->
+        <div class="glass-card mb-6 animate-fade-in">
+            <div class="flex flex-col md:flex-row gap-4">
+                <!-- Search -->
+                <div class="flex-1">
+                    <input 
+                        type="text" 
+                        id="search-input" 
+                        placeholder="Search books by title or author..." 
+                        class="input"
+                    >
+                </div>
+                
+                <!-- Filter by Status -->
+                <div class="w-full md:w-48">
+                    <select id="status-filter" class="input">
+                        <option value="all">All Books</option>
+                        <option value="reading">Currently Reading</option>
+                        <option value="finished">Finished</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading-state" class="flex items-center justify-center py-20">
+            <div class="text-center">
+                <div class="inline-block animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-accent-purple mb-4"></div>
+                <p class="text-text-secondary">Loading your books...</p>
+            </div>
+        </div>
+
+        <!-- Books Grid -->
+        <div id="books-grid" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Book cards will be dynamically inserted here -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="empty-state" class="hidden">
+            <div class="glass-card text-center py-16">
+                <div class="text-6xl mb-4">📚</div>
+                <h3 class="text-2xl font-semibold mb-2">No books yet</h3>
+                <p class="text-text-secondary mb-6">Start building your reading library</p>
+                <button onclick="document.getElementById('add-book-btn').click()" class="btn btn-primary">
+                    Add Your First Book
+                </button>
+            </div>
+        </div>
+
+        <!-- No Results State -->
+        <div id="no-results-state" class="hidden">
+            <div class="glass-card text-center py-16">
+                <div class="text-6xl mb-4">🔍</div>
+                <h3 class="text-2xl font-semibold mb-2">No books found</h3>
+                <p class="text-text-secondary mb-6">Try adjusting your search or filters</p>
+            </div>
+        </div>
+
+        <!-- Error State -->
+        <div id="error-state" class="hidden">
+            <div class="glass-card text-center py-12">
+                <div class="text-6xl mb-4">😞</div>
+                <h3 class="text-2xl font-semibold mb-2">Oops! Something went wrong</h3>
+                <p class="text-text-secondary mb-6">We couldn't load your books.</p>
+                <button onclick="location.reload()" class="btn btn-primary">
+                    Try Again
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Book Modal (Add/Edit) -->
+    <div id="book-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="glass-card max-w-md w-full animate-fade-in">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-2xl font-bold" id="modal-title">Add Book</h3>
+                <button id="close-modal-btn" class="text-text-muted hover:text-white transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Modal Form -->
+            <form id="book-form">
+                <input type="hidden" id="book-id" name="id">
+                
+                <!-- Title -->
+                <div class="mb-4">
+                    <label for="book-title" class="block text-sm font-medium mb-2">
+                        Title <span class="text-red-400">*</span>
+                    </label>
+                    <input 
+                        type="text" 
+                        id="book-title" 
+                        name="title" 
+                        class="input" 
+                        placeholder="Enter book title"
+                        required
+                    >
+                </div>
+
+                <!-- Author -->
+                <div class="mb-4">
+                    <label for="book-author" class="block text-sm font-medium mb-2">
+                        Author
+                    </label>
+                    <input 
+                        type="text" 
+                        id="book-author" 
+                        name="author" 
+                        class="input" 
+                        placeholder="Enter author name (optional)"
+                    >
+                </div>
+
+                <!-- Start Date -->
+                <div class="mb-4">
+                    <label for="book-start-date" class="block text-sm font-medium mb-2">
+                        Start Date <span class="text-red-400">*</span>
+                    </label>
+                    <input 
+                        type="date" 
+                        id="book-start-date" 
+                        name="start_date" 
+                        class="input"
+                        required
+                    >
+                </div>
+
+                <!-- End Date (only show in edit mode for finished books) -->
+                <div class="mb-4 hidden" id="end-date-field">
+                    <label for="book-end-date" class="block text-sm font-medium mb-2">
+                        End Date
+                    </label>
+                    <input 
+                        type="date" 
+                        id="book-end-date" 
+                        name="end_date" 
+                        class="input"
+                    >
+                </div>
+
+                <!-- Status (only show in edit mode) -->
+                <div class="mb-6 hidden" id="status-field">
+                    <label for="book-status" class="block text-sm font-medium mb-2">
+                        Status
+                    </label>
+                    <select id="book-status" name="status" class="input">
+                        <option value="reading">Reading</option>
+                        <option value="finished">Finished</option>
+                    </select>
+                </div>
+
+                <!-- Form Actions -->
+                <div class="flex gap-3">
+                    <button type="button" id="cancel-btn" class="btn btn-secondary flex-1">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-primary flex-1">
+                        <span id="submit-btn-text">Add Book</span>
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 
-    <!-- Modal para Libro (Crear/Editar) -->
-    <div class="modal fade" id="bookModal" tabindex="-1" aria-labelledby="bookModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content" style="border-radius: 20px; border: 3px solid white;">
-                <div class="modal-header" style="background-color: var(--kawaii-purple); border-top-left-radius: 17px; border-top-right-radius: 17px;">
-                    <h5 class="modal-title fw-bold" id="bookModalLabel">
-                        📖 Añadir Nuevo Libro
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body p-4">
-                    <form id="bookForm">
-                        <!-- Título del Libro -->
-                        <div class="mb-3">
-                            <label for="bookTitle" class="form-label fw-bold">
-                                Título <span class="text-danger">*</span>
-                            </label>
-                            <input type="text" class="form-control" id="bookTitle" name="title" 
-                                   placeholder="Ej: El Principito" required
-                                   style="border-radius: 10px; border: 2px solid var(--kawaii-blue);">
-                            <div class="form-text">Nombre del libro que vas a leer</div>
-                        </div>
-
-                        <!-- Autor del Libro -->
-                        <div class="mb-3">
-                            <label for="bookAuthor" class="form-label fw-bold">
-                                Autor
-                            </label>
-                            <input type="text" class="form-control" id="bookAuthor" name="author" 
-                                   placeholder="Ej: Antoine de Saint-Exupéry"
-                                   style="border-radius: 10px; border: 2px solid var(--kawaii-blue);">
-                            <div class="form-text">Opcional - Nombre del autor</div>
-                        </div>
-
-                        <!-- Fecha de Inicio -->
-                        <div class="mb-3">
-                            <label for="bookStartDate" class="form-label fw-bold">
-                                Fecha de Inicio <span class="text-danger">*</span>
-                            </label>
-                            <input type="date" class="form-control" id="bookStartDate" name="start_date" 
-                                   required
-                                   style="border-radius: 10px; border: 2px solid var(--kawaii-blue);">
-                            <div class="form-text">¿Cuándo empezaste a leerlo?</div>
-                        </div>
-
-                        <!-- Fecha de Finalización (solo para edición) -->
-                        <div class="mb-3" style="display: none;">
-                            <label for="bookEndDate" class="form-label fw-bold">
-                                Fecha de Finalización
-                            </label>
-                            <input type="date" class="form-control" id="bookEndDate" name="end_date" 
-                                   style="border-radius: 10px; border: 2px solid var(--kawaii-blue);">
-                            <div class="form-text">¿Cuándo terminaste de leerlo?</div>
-                        </div>
-
-                        <div class="alert alert-info" style="border-radius: 10px; border: 2px solid var(--kawaii-blue);">
-                            <small>
-                                <strong>💡 Consejo:</strong> Todos los campos marcados con 
-                                <span class="text-danger">*</span> son obligatorios.
-                            </small>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer" style="border-bottom-left-radius: 17px; border-bottom-right-radius: 17px;">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" 
-                            style="border-radius: 10px;">
-                        ❌ Cancelar
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="glass-card max-w-md w-full animate-fade-in">
+            <div class="text-center">
+                <div class="text-6xl mb-4">⚠️</div>
+                <h3 class="text-2xl font-bold mb-2">Delete Book?</h3>
+                <p class="text-text-secondary mb-6" id="delete-message">
+                    Are you sure you want to delete this book? This action cannot be undone.
+                </p>
+                <div class="flex gap-3">
+                    <button id="cancel-delete-btn" class="btn btn-secondary flex-1">
+                        Cancel
                     </button>
-                    <button type="button" class="btn btn-kawaii" id="saveBookBtn"
-                            style="border-radius: 10px; font-weight: 600;">
-                        💾 Guardar Libro
+                    <button id="confirm-delete-btn" class="btn btn-danger flex-1">
+                        Delete
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Footer Kawaii -->
-    <footer class="text-center py-4 mt-5" style="background-color: var(--kawaii-pink); border-top: 3px solid white;">
-        <p class="mb-0" style="color: var(--text-color); font-weight: 500;">
-            ✨ Reading Tracker Kawaii 2026 ✨
-        </p>
-        <small style="color: var(--text-color);">Hecho con 💕 para los amantes de la lectura</small>
-    </footer>
-
-    <!-- Bootstrap 5 Bundle with Popper -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- Tabulator JS -->
-    <script type="text/javascript" src="https://unpkg.com/tabulator-tables@6.2.1/dist/js/tabulator.min.js"></script>
-    
-    <!-- Main JavaScript Module -->
-    <script type="module" src="js/main.js"></script>
-    
-    <!-- Script para establecer fecha actual por defecto -->
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Establecer fecha máxima como hoy (no se puede seleccionar futuro)
-            const today = new Date().toISOString().split('T')[0];
-            const dateInput = document.getElementById('bookStartDate');
-            if (dateInput) {
-                dateInput.max = today;
-                dateInput.value = today; // Fecha por defecto
-            }
-        });
-    </script>
-    
-    <!-- Estilos adicionales para la página -->
-    <style>
-        .nav-link {
-            transition: all 0.3s ease;
-        }
-        
-        .nav-link:hover {
-            background-color: rgba(255, 255, 255, 0.3);
-            transform: translateY(-2px);
-        }
-        
-        .nav-link.active {
-            background-color: white !important;
-            color: var(--text-color) !important;
-        }
-
-        /* Estilos para Tabulator */
-        .tabulator {
-            border-radius: 15px;
-            border: none;
-            font-family: 'Quicksand', sans-serif;
-        }
-
-        .tabulator-header {
-            background-color: var(--kawaii-blue) !important;
-            border-radius: 15px 15px 0 0;
-        }
-
-        .tabulator-col {
-            border-right: 1px solid rgba(0,0,0,0.1);
-        }
-
-        .tabulator-row {
-            border-bottom: 1px solid rgba(0,0,0,0.05);
-        }
-
-        .tabulator-row:hover {
-            background-color: rgba(255, 249, 196, 0.3) !important;
-        }
-
-        /* Paginación kawaii */
-        .tabulator-footer {
-            border-radius: 0 0 15px 15px;
-            background-color: var(--kawaii-yellow) !important;
-        }
-
-        .tabulator-page {
-            border-radius: 8px;
-            margin: 0 2px;
-        }
-
-        .tabulator-page.active {
-            background-color: var(--kawaii-pink) !important;
-        }
-    </style>
-
+    <!-- JavaScript -->
+    <script type="module" src="js/pages/books.js"></script>
 </body>
 </html>

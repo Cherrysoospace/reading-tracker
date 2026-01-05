@@ -54,6 +54,7 @@ class BookUpdate(BaseModel):
     """
     title: Optional[str] = Field(None, min_length=1, max_length=200, description="New title of the book")
     author: Optional[str] = Field(None, max_length=100, description="New author of the book")
+    start_date: Optional[date] = Field(None, description="Date when reading started")
     end_date: Optional[date] = Field(None, description="Date when reading finished")
     status: Optional[str] = Field(None, description="Reading status: 'reading' or 'finished'")
     
@@ -73,6 +74,14 @@ class BookUpdate(BaseModel):
         """Strip whitespace from author if provided."""
         if v is not None:
             return v.strip() if v.strip() else None
+        return v
+    
+    @field_validator('start_date')
+    @classmethod
+    def validate_start_date(cls, v: Optional[date]) -> Optional[date]:
+        """Validate that start_date is not in the future if provided."""
+        if v is not None and v > date.today():
+            raise ValueError('Start date cannot be in the future')
         return v
     
     @field_validator('status')

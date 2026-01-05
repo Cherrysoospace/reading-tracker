@@ -1,0 +1,119 @@
+/* css/datatables-custom.css */
+
+/* DataTables Dark Theme Customization */
+
+/* Main table styling */
+#sessions-table {
+    width: 100% !important;
+}
+
+.dataTables_wrapper {
+    color: var(--text-primary);
+}
+
+/* Table */
+table.dataTable {
+    border-collapse: collapse !important;
+    background: transparent;
+}
+
+table.dataTable thead th {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-weight: 600;
+    padding: 12px 16px;
+    border-bottom: 2px solid var(--glass-border);
+}
+
+table.dataTable tbody td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--glass-border);
+    color: var(--text-secondary);
+}
+
+table.dataTable tbody tr:hover {
+    background: var(--bg-secondary) !important;
+}
+
+/* Search and entries */
+.dataTables_filter input {
+    background: var(--bg-secondary);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: var(--text-primary);
+    margin-left: 8px;
+}
+
+.dataTables_filter input:focus {
+    outline: none;
+    border-color: var(--accent-purple);
+}
+
+.dataTables_length select {
+    background: var(--bg-secondary);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: var(--text-primary);
+    margin: 0 8px;
+}
+
+/* Pagination */
+.dataTables_paginate {
+    color: var(--text-secondary);
+}
+
+.dataTables_paginate .paginate_button {
+    background: var(--bg-secondary) !important;
+    border: 1px solid var(--glass-border) !important;
+    color: var(--text-primary) !important;
+    border-radius: 8px;
+    padding: 6px 12px;
+    margin: 0 4px;
+}
+
+.dataTables_paginate .paginate_button:hover {
+    background: var(--accent-purple) !important;
+    border-color: var(--accent-purple) !important;
+    color: white !important;
+}
+
+.dataTables_paginate .paginate_button.current {
+    background: var(--accent-purple) !important;
+    border-color: var(--accent-purple) !important;
+    color: white !important;
+}
+
+.dataTables_paginate .paginate_button.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Info text */
+.dataTables_info {
+    color: var(--text-muted);
+}
+
+/* Sorting icons */
+table.dataTable thead .sorting:before,
+table.dataTable thead .sorting_asc:before,
+table.dataTable thead .sorting_desc:before,
+table.dataTable thead .sorting:after,
+table.dataTable thead .sorting_asc:after,
+table.dataTable thead .sorting_desc:after {
+    opacity: 0.3;
+    color: var(--text-secondary);
+}
+
+table.dataTable thead .sorting_asc:after,
+table.dataTable thead .sorting_desc:after {
+    opacity: 1;
+    color: var(--accent-purple);
+}
+
+/* Empty table message */
+.dataTables_empty {
+    color: var(--text-muted);
+    padding: 40px !important;
+}

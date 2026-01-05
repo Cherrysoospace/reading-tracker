@@ -127,6 +127,7 @@ class BookService:
         book_id: int,
         title: Optional[str] = None,
         author: Optional[str] = None,
+        start_date: Optional[date] = None,
         end_date: Optional[date] = None,
         status: Optional[str] = None
     ) -> Book:
@@ -137,6 +138,7 @@ class BookService:
             book_id: ID of the book to update
             title: New title (optional)
             author: New author (optional)
+            start_date: New start date (optional, cannot be in the future)
             end_date: New end date (optional, must not be before start_date)
             status: New status (optional, must be 'reading' or 'finished')
             
@@ -164,6 +166,17 @@ class BookService:
         if author is not None:
             update_data['author'] = author.strip() if author.strip() else None
         
+        if start_date is not None:
+            # Validate start_date is not in the future
+            if start_date > date.today():
+                logger.warning(f"Book {book_id} update failed: future start_date {start_date}")
+                raise HTTPException(
+                    status_code=400,
+                    detail="Start date cannot be in the future"
+                )
+            # Convert date to string for database
+            update_data['start_date'] = start_date.strftime('%Y-%m-%d')
+        
         if status is not None:
             # Validate status
             if status not in ['reading', 'finished']:
@@ -176,7 +189,8 @@ class BookService:
         
         if end_date is not None:
             # Validate end_date is not before start_date
-            book_start_date = self._parse_date_string(book.get_start_date())
+            # Use the new start_date if provided, otherwise use the existing one
+            book_start_date = start_date if start_date is not None else self._parse_date_string(book.get_start_date())
             
             if end_date < book_start_date:
                 logger.warning(f"Book {book_id} update failed: end_date {end_date} before start_date {book_start_date}")

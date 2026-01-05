@@ -10,11 +10,13 @@ import CONFIG from '../config/config.js';
 const statsApi = {
     /**
      * Get comprehensive statistics summary
+     * @param {number|null} year - Optional year to filter statistics (e.g., 2025)
      * @returns {Promise<Object>} Complete statistics object with all metrics
      */
-    async getSummary() {
+    async getSummary(year = null) {
         try {
-            const stats = await api.get(CONFIG.API.ENDPOINTS.STATS_SUMMARY);
+            const params = year ? { year } : {};
+            const stats = await api.get(CONFIG.API.ENDPOINTS.STATS_SUMMARY, params);
             return stats;
         } catch (error) {
             console.error('Error fetching summary stats:', error);
@@ -24,11 +26,13 @@ const statsApi = {
 
     /**
      * Get basic statistics (lightweight)
+     * @param {number|null} year - Optional year to filter statistics (e.g., 2025)
      * @returns {Promise<Object>} Basic statistics object
      */
-    async getBasic() {
+    async getBasic(year = null) {
         try {
-            const stats = await api.get(CONFIG.API.ENDPOINTS.STATS_BASIC);
+            const params = year ? { year } : {};
+            const stats = await api.get(CONFIG.API.ENDPOINTS.STATS_BASIC, params);
             return stats;
         } catch (error) {
             console.error('Error fetching basic stats:', error);
@@ -38,11 +42,13 @@ const statsApi = {
 
     /**
      * Get daily reading statistics
+     * @param {number|null} year - Optional year to filter statistics (e.g., 2025)
      * @returns {Promise<Array>} Array of daily stats with date and total_minutes
      */
-    async getDailyStats() {
+    async getDailyStats(year = null) {
         try {
-            const stats = await api.get(CONFIG.API.ENDPOINTS.STATS_DAILY);
+            const params = year ? { year } : {};
+            const stats = await api.get(CONFIG.API.ENDPOINTS.STATS_DAILY, params);
             return stats || [];
         } catch (error) {
             console.error('Error fetching daily stats:', error);
@@ -52,11 +58,13 @@ const statsApi = {
 
     /**
      * Get statistics by book
+     * @param {number|null} year - Optional year to filter statistics (e.g., 2025)
      * @returns {Promise<Array>} Array of book stats with book info and total minutes
      */
-    async getBookStats() {
+    async getBookStats(year = null) {
         try {
-            const stats = await api.get(CONFIG.API.ENDPOINTS.STATS_BOOKS);
+            const params = year ? { year } : {};
+            const stats = await api.get(CONFIG.API.ENDPOINTS.STATS_BOOKS, params);
             return stats || [];
         } catch (error) {
             console.error('Error fetching book stats:', error);
@@ -66,11 +74,13 @@ const statsApi = {
 
     /**
      * Get streak statistics
+     * @param {number|null} year - Optional year to filter statistics (e.g., 2025)
      * @returns {Promise<Object>} Object with current_streak and max_streak
      */
-    async getStreaks() {
+    async getStreaks(year = null) {
         try {
-            const streaks = await api.get(CONFIG.API.ENDPOINTS.STATS_STREAKS);
+            const params = year ? { year } : {};
+            const streaks = await api.get(CONFIG.API.ENDPOINTS.STATS_STREAKS, params);
             return streaks;
         } catch (error) {
             console.error('Error fetching streak stats:', error);
@@ -80,11 +90,13 @@ const statsApi = {
 
     /**
      * Get most read book
+     * @param {number|null} year - Optional year to filter statistics
      * @returns {Promise<Object|null>} Most read book object or null if no sessions
      */
-    async getMostReadBook() {
+    async getMostReadBook(year = null) {
         try {
-            const book = await api.get(CONFIG.API.ENDPOINTS.STATS_MOST_READ_BOOK);
+            const params = year ? { year } : {};
+            const book = await api.get(CONFIG.API.ENDPOINTS.STATS_MOST_READ_BOOK, params);
             return book;
         } catch (error) {
             console.error('Error fetching most read book:', error);
@@ -94,11 +106,13 @@ const statsApi = {
 
     /**
      * Get most read author
+     * @param {number|null} year - Optional year to filter statistics
      * @returns {Promise<Object>} Object with author name
      */
-    async getMostReadAuthor() {
+    async getMostReadAuthor(year = null) {
         try {
-            const result = await api.get(CONFIG.API.ENDPOINTS.STATS_MOST_READ_AUTHOR);
+            const params = year ? { year } : {};
+            const result = await api.get(CONFIG.API.ENDPOINTS.STATS_MOST_READ_AUTHOR, params);
             return result;
         } catch (error) {
             console.error('Error fetching most read author:', error);
@@ -108,11 +122,13 @@ const statsApi = {
 
     /**
      * Get total books finished count
+     * @param {number|null} year - Optional year to filter statistics (e.g., 2025)
      * @returns {Promise<Object>} Object with books_finished count
      */
-    async getBooksFinishedCount() {
+    async getBooksFinishedCount(year = null) {
         try {
-            const result = await api.get(CONFIG.API.ENDPOINTS.STATS_BOOKS_FINISHED);
+            const params = year ? { year } : {};
+            const result = await api.get(CONFIG.API.ENDPOINTS.STATS_BOOKS_FINISHED, params);
             return result;
         } catch (error) {
             console.error('Error fetching books finished count:', error);
@@ -181,11 +197,12 @@ const statsApi = {
     /**
      * Get daily stats for last N days
      * @param {number} days - Number of days
+     * @param {number|null} year - Optional year to filter statistics
      * @returns {Promise<Array>} Array of daily stats for the period
      */
-    async getDailyStatsForPeriod(days) {
+    async getDailyStatsForPeriod(days, year = null) {
         try {
-            const allStats = await this.getDailyStats();
+            const allStats = await this.getDailyStats(year);
             
             // Get date range
             const today = new Date();
@@ -224,11 +241,12 @@ const statsApi = {
     /**
      * Calculate average reading time per day
      * @param {Array} dailyStats - Array of daily stats (optional, fetches if not provided)
+     * @param {number|null} year - Optional year to filter statistics
      * @returns {Promise<number>} Average minutes per day
      */
-    async calculateAveragePerDay(dailyStats = null) {
+    async calculateAveragePerDay(dailyStats = null, year = null) {
         try {
-            const stats = dailyStats || await this.getDailyStats();
+            const stats = dailyStats || await this.getDailyStats(year);
             
             if (stats.length === 0) return 0;
             
@@ -247,11 +265,12 @@ const statsApi = {
     /**
      * Get reading consistency percentage
      * @param {number} days - Number of days to check (default: 30)
+     * @param {number|null} year - Optional year to filter statistics
      * @returns {Promise<number>} Percentage of days with reading sessions (0-100)
      */
-    async getConsistencyPercentage(days = 30) {
+    async getConsistencyPercentage(days = 30, year = null) {
         try {
-            const stats = await this.getDailyStatsForPeriod(days);
+            const stats = await this.getDailyStatsForPeriod(days, year);
             const daysWithSessions = stats.filter(stat => stat.total_minutes > 0).length;
             
             return Math.round((daysWithSessions / days) * 100);
@@ -264,11 +283,12 @@ const statsApi = {
     /**
      * Get top N books by reading time
      * @param {number} limit - Number of books to return (default: 5)
+     * @param {number|null} year - Optional year to filter statistics
      * @returns {Promise<Array>} Array of top books sorted by total_minutes
      */
-    async getTopBooks(limit = 5) {
+    async getTopBooks(limit = 5, year = null) {
         try {
-            const bookStats = await this.getBookStats();
+            const bookStats = await this.getBookStats(year);
             
             // Sort by total_minutes descending and limit
             return bookStats
@@ -283,11 +303,12 @@ const statsApi = {
     /**
      * Get reading activity data for heatmap/calendar view
      * @param {number} days - Number of days (default: 365)
+     * @param {number|null} year - Optional year to filter statistics
      * @returns {Promise<Array>} Array of dates with reading activity
      */
-    async getActivityData(days = 365) {
+    async getActivityData(days = 365, year = null) {
         try {
-            const stats = await this.getDailyStatsForPeriod(days);
+            const stats = await this.getDailyStatsForPeriod(days, year);
             
             return stats.map(stat => ({
                 date: stat.date,

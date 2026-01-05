@@ -147,7 +147,7 @@ class BookRepository:
         
         Args:
             book_id: ID of the book to update
-            data: Dictionary containing fields to update (title, author, end_date, status)
+            data: Dictionary containing fields to update (title, author, start_date, end_date, status)
             
         Returns:
             bool: True if update successful, False otherwise
@@ -161,7 +161,7 @@ class BookRepository:
                 return False
             
             # Build UPDATE query dynamically based on data keys
-            allowed_fields = {'title', 'author', 'end_date', 'status'}
+            allowed_fields = {'title', 'author', 'start_date', 'end_date', 'status'}
             update_fields = {k: v for k, v in data.items() if k in allowed_fields}
             
             if not update_fields:

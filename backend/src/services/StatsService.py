@@ -152,17 +152,42 @@ class StatsService:
         logger.info(f"Most read book: '{result['title']}' with {result['total_minutes']} minutes")
         return result
     
-    def get_books_finished_count(self) -> int:
+    def get_books_finished_count(self, year: Optional[int] = None) -> int:
         """
-        Count the number of finished books.
+        Count the number of finished books, optionally filtered by year.
+        
+        Args:
+            year: Optional year to filter by (e.g., 2025). If provided, only counts books
+                  finished in that specific year based on end_date.
         
         Returns:
-            int: Number of books with status='finished', 0 if none
+            int: Number of books with status='finished' (optionally in specified year), 0 if none
         """
-        logger.debug("Counting finished books")
+        logger.debug(f"Counting finished books{f' for year {year}' if year else ''}")
         books = self._book_repo.get_all()
         
-        finished_count = sum(1 for book in books if book.get_status() == 'finished')
+        if year is None:
+            # No filter - count all finished books
+            finished_count = sum(1 for book in books if book.get_status() == 'finished')
+        else:
+            # Filter by year - only count books finished in the specified year
+            finished_count = 0
+            for book in books:
+                if book.get_status() == 'finished' and book.get_end_date():
+                    end_date = book.get_end_date()
+                    
+                    # Parse year from end_date
+                    if isinstance(end_date, str):
+                        # Parse string date (YYYY-MM-DD)
+                        book_year = int(end_date.split('-')[0])
+                    elif isinstance(end_date, date):
+                        book_year = end_date.year
+                    else:
+                        continue
+                    
+                    if book_year == year:
+                        finished_count += 1
+        
         logger.info(f"Finished books count: {finished_count}")
         return finished_count
     
@@ -421,7 +446,7 @@ class StatsService:
         
         summary = {
             "total_minutes_read": self.get_total_time_read(year),
-            "books_finished": self.get_books_finished_count(),
+            "books_finished": self.get_books_finished_count(year),
             "books_read_in_year": self.get_books_read_in_year(year) if year else None,
             "daily_stats": self.get_daily_stats(year),
             "book_stats": self.get_time_by_book(year),

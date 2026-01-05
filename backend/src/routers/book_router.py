@@ -184,6 +184,7 @@ def update_book(
         book_id=book_id,
         title=book.title,
         author=book.author,
+        start_date=book.start_date,
         end_date=book.end_date,
         status=book.status
     )

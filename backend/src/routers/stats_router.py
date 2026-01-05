@@ -157,7 +157,7 @@ def get_basic_stats(
     
     return BasicStatsResponse(
         total_minutes_read=stats_service.get_total_time_read(year),
-        books_finished=stats_service.get_books_finished_count(),
+        books_finished=stats_service.get_books_finished_count(year),
         current_streak=stats_service.calculate_current_streak(),
         most_read_author=stats_service.get_most_read_author(year)
     )
@@ -297,22 +297,24 @@ def get_most_read_author(
     "/books-finished",
     response_model=Dict[str, int],
     summary="Get total books finished",
-    description="Get the total number of books marked as finished"
+    description="Get the total number of books marked as finished. Optionally filter by year."
 )
 def get_books_finished(
+    year: Optional[int] = Query(None, description="Filter by year (e.g., 2025). If not provided, returns all finished books."),
     stats_service: StatsService = Depends(get_stats_service)
 ) -> Dict[str, int]:
     """
     Get count of finished books.
     
     Args:
+        year: Optional year to filter statistics
         stats_service: StatsService dependency
         
     Returns:
         Dict[str, int]: Dictionary with books_finished count
     """
-    logger.info("GET /stats/books-finished")
-    count = stats_service.get_books_finished_count()
+    logger.info(f"GET /stats/books-finished{f'?year={year}' if year else ''}")
+    count = stats_service.get_books_finished_count(year)
     return {"books_finished": count}
 
 

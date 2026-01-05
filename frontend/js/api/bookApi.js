@@ -72,6 +72,7 @@ const bookApi = {
      * @param {Object} bookData - Updated book data (all fields optional)
      * @param {string} bookData.title - Book title
      * @param {string} bookData.author - Book author
+     * @param {string} bookData.start_date - Start date in YYYY-MM-DD format
      * @param {string} bookData.end_date - End date in YYYY-MM-DD format
      * @param {string} bookData.status - Book status ('reading' or 'finished')
      * @returns {Promise<Object>} Updated book object
@@ -87,6 +88,10 @@ const bookApi = {
 
             if (bookData.author !== undefined) {
                 payload.author = bookData.author.trim();
+            }
+
+            if (bookData.start_date !== undefined) {
+                payload.start_date = bookData.start_date;
             }
 
             if (bookData.end_date !== undefined) {

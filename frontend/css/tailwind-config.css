@@ -116,7 +116,7 @@ body {
     overflow-x: hidden;
 }
 
-/* Background with gradient overlay and subtle pattern */
+/* Background with image and gradient overlay */
 body::before {
     content: '';
     position: fixed;
@@ -126,8 +126,14 @@ body::before {
     height: 100%;
     background: var(--bg-primary);
     background-image: 
+        linear-gradient(135deg, rgba(15, 23, 42, 0.85) 0%, rgba(15, 23, 42, 0.75) 50%, rgba(15, 23, 42, 0.85) 100%),
         var(--gradient-radial-purple),
-        var(--gradient-radial-pink);
+        var(--gradient-radial-pink),
+        url('../assets/images/background-tracker.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
     z-index: -1;
 }
 

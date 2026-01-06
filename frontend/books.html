@@ -12,8 +12,18 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
+    <!-- jQuery (required for DataTables) -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+    
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    
     <!-- Custom CSS -->
     <link rel="stylesheet" href="css/tailwind-config.css">
+    <link rel="stylesheet" href="css/datatables-custom.css">
     <link rel="stylesheet" href="css/custom.css">
 </head>
 <body class="font-['Inter']">
@@ -46,6 +56,10 @@
                         <span class="text-lg">📊</span>
                         <span>Statistics</span>
                     </a>
+                    <a href="wrapped.html" class="nav-link">
+                        <span class="text-lg">✨</span>
+                        <span>Wrapped</span>
+                    </a>
                 </div>
             </div>
         </div>
@@ -66,72 +80,69 @@
             </button>
         </div>
 
-        <!-- Filter/Search Section -->
+        <!-- Filter Section -->
         <div class="glass-card mb-6 animate-fade-in">
-            <div class="flex flex-col md:flex-row gap-4">
-                <!-- Search -->
-                <div class="flex-1">
-                    <input 
-                        type="text" 
-                        id="search-input" 
-                        placeholder="Search books by title or author..." 
-                        class="input"
-                    >
-                </div>
-                
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <!-- Filter by Status -->
-                <div class="w-full md:w-48">
+                <div>
+                    <label for="status-filter" class="block text-sm font-medium mb-2">
+                        Filter by Status
+                    </label>
                     <select id="status-filter" class="input">
                         <option value="all">All Books</option>
                         <option value="reading">Currently Reading</option>
                         <option value="finished">Finished</option>
                     </select>
                 </div>
+                
+                <!-- Clear Filters -->
+                <div class="flex items-end">
+                    <button id="clear-filters-btn" class="btn btn-secondary w-full">
+                        Clear Filters
+                    </button>
+                </div>
             </div>
         </div>
 
-        <!-- Loading State -->
-        <div id="loading-state" class="flex items-center justify-center py-20">
-            <div class="text-center">
-                <div class="inline-block animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-accent-purple mb-4"></div>
+        <!-- Books Table -->
+        <div class="glass-card animate-fade-in">
+            <h3 class="text-xl font-semibold mb-4 flex items-center">
+                <span class="text-2xl mr-2">📚</span>
+                Books Library
+            </h3>
+
+            <!-- Loading State -->
+            <div id="table-loading" class="text-center py-12">
+                <div class="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-accent-purple mb-4"></div>
                 <p class="text-text-secondary">Loading your books...</p>
             </div>
-        </div>
 
-        <!-- Books Grid -->
-        <div id="books-grid" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <!-- Book cards will be dynamically inserted here -->
-        </div>
+            <!-- DataTable -->
+            <div id="table-container" class="hidden overflow-x-auto">
+                <table id="books-table" class="display w-full">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Author</th>
+                            <th>Status</th>
+                            <th>Start Date</th>
+                            <th>End Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- DataTables will populate this -->
+                    </tbody>
+                </table>
+            </div>
 
-        <!-- Empty State -->
-        <div id="empty-state" class="hidden">
-            <div class="glass-card text-center py-16">
+            <!-- Empty State -->
+            <div id="empty-state" class="hidden text-center py-12">
                 <div class="text-6xl mb-4">📚</div>
                 <h3 class="text-2xl font-semibold mb-2">No books yet</h3>
                 <p class="text-text-secondary mb-6">Start building your reading library</p>
                 <button onclick="document.getElementById('add-book-btn').click()" class="btn btn-primary">
                     Add Your First Book
-                </button>
-            </div>
-        </div>
-
-        <!-- No Results State -->
-        <div id="no-results-state" class="hidden">
-            <div class="glass-card text-center py-16">
-                <div class="text-6xl mb-4">🔍</div>
-                <h3 class="text-2xl font-semibold mb-2">No books found</h3>
-                <p class="text-text-secondary mb-6">Try adjusting your search or filters</p>
-            </div>
-        </div>
-
-        <!-- Error State -->
-        <div id="error-state" class="hidden">
-            <div class="glass-card text-center py-12">
-                <div class="text-6xl mb-4">😞</div>
-                <h3 class="text-2xl font-semibold mb-2">Oops! Something went wrong</h3>
-                <p class="text-text-secondary mb-6">We couldn't load your books.</p>
-                <button onclick="location.reload()" class="btn btn-primary">
-                    Try Again
                 </button>
             </div>
         </div>

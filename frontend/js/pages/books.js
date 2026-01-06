@@ -15,6 +15,7 @@ class BooksPage {
     constructor() {
         this.books = [];
         this.filteredBooks = [];
+        this.dataTable = null;
         this.currentBookId = null;
         this.isEditMode = false;
         
@@ -32,12 +33,12 @@ class BooksPage {
             // Load books
             await this.loadBooks();
 
-            // Render books
-            this.renderBooks();
+            // Initialize DataTable
+            this.initDataTable();
 
         } catch (error) {
             console.error('Books page initialization error:', error);
-            this.showError();
+            notifications.error('Failed to load books page');
         }
     }
 
@@ -64,14 +65,14 @@ class BooksPage {
             this.handleFormSubmit(e);
         });
 
-        // Search input
-        document.getElementById('search-input').addEventListener('input', (e) => {
-            this.handleSearch(e.target.value);
-        });
-
         // Status filter
         document.getElementById('status-filter').addEventListener('change', (e) => {
-            this.handleFilter(e.target.value);
+            this.applyFilters();
+        });
+
+        // Clear filters
+        document.getElementById('clear-filters-btn').addEventListener('click', () => {
+            this.clearFilters();
         });
 
         // Delete modal buttons
@@ -102,96 +103,154 @@ class BooksPage {
      */
     async loadBooks() {
         try {
-            this.showLoading();
             this.books = await bookApi.getAll();
             this.filteredBooks = [...this.books];
-            this.showContent();
         } catch (error) {
             console.error('Error loading books:', error);
-            this.showError();
             throw error;
         }
     }
 
     /**
-     * Render books grid
+     * Initialize DataTable
      */
-    renderBooks() {
-        const container = document.getElementById('books-grid');
-        
-        // Show empty state if no books
-        if (this.books.length === 0) {
-            this.showEmptyState();
-            return;
-        }
-
-        // Show no results if filtered list is empty
-        if (this.filteredBooks.length === 0) {
-            this.showNoResults();
-            return;
-        }
-
-        // Hide empty/no results states
+    initDataTable() {
+        // Show loading
+        document.getElementById('table-loading').classList.remove('hidden');
+        document.getElementById('table-container').classList.add('hidden');
         document.getElementById('empty-state').classList.add('hidden');
-        document.getElementById('no-results-state').classList.add('hidden');
-        container.classList.remove('hidden');
 
-        // Render book cards
-        container.innerHTML = this.filteredBooks.map(book => this.createBookCard(book)).join('');
+        // Check if there are books
+        if (this.books.length === 0) {
+            document.getElementById('table-loading').classList.add('hidden');
+            document.getElementById('empty-state').classList.remove('hidden');
+            return;
+        }
+
+        // Prepare data
+        const tableData = this.filteredBooks.map(book => {
+            return {
+                title: book.title,
+                author: book.author || 'Unknown Author',
+                status: book.status,
+                start_date: book.start_date,
+                end_date: book.end_date || '',
+                id: book.id
+            };
+        });
+
+        // Initialize DataTable
+        this.dataTable = $('#books-table').DataTable({
+            data: tableData,
+            columns: [
+                { data: 'title' },
+                { data: 'author' },
+                { 
+                    data: 'status',
+                    render: (data) => {
+                        if (data === 'finished') {
+                            return '<span class="px-2 py-1 text-xs font-semibold rounded bg-green-500/20 text-green-400">Finished</span>';
+                        }
+                        return '<span class="px-2 py-1 text-xs font-semibold rounded bg-blue-500/20 text-blue-400">Reading</span>';
+                    }
+                },
+                { 
+                    data: 'start_date',
+                    render: (data) => dateUtils.toDisplayFormat(data)
+                },
+                { 
+                    data: 'end_date',
+                    render: (data) => data ? dateUtils.toDisplayFormat(data) : '-'
+                },
+                {
+                    data: null,
+                    orderable: false,
+                    render: (data, type, row) => {
+                        let buttons = '';
+                        if (row.status === 'reading') {
+                            buttons += `
+                                <button 
+                                    onclick="booksPage.markAsFinished(${row.id})" 
+                                    class="text-green-400 hover:text-green-300 transition-colors mr-2"
+                                    title="Mark as Finished"
+                                >
+                                    ✓
+                                </button>
+                            `;
+                        }
+                        buttons += `
+                            <button 
+                                onclick="booksPage.editBook(${row.id})" 
+                                class="text-blue-400 hover:text-blue-300 transition-colors mr-2"
+                                title="Edit"
+                            >
+                                ✏️
+                            </button>
+                            <button 
+                                onclick="booksPage.deleteBook(${row.id})" 
+                                class="text-red-400 hover:text-red-300 transition-colors"
+                                title="Delete"
+                            >
+                                🗑️
+                            </button>
+                        `;
+                        return buttons;
+                    }
+                }
+            ],
+            order: [[0, 'asc']], // Sort by title by default
+            pageLength: 10,
+            language: {
+                search: "Search:",
+                lengthMenu: "Show _MENU_ books per page",
+                info: "Showing _START_ to _END_ of _TOTAL_ books",
+                infoEmpty: "No books available",
+                infoFiltered: "(filtered from _MAX_ total books)",
+                zeroRecords: "No books found",
+                emptyTable: "No books in your library"
+            },
+            destroy: true
+        });
+
+        // Show table
+        document.getElementById('table-loading').classList.add('hidden');
+        document.getElementById('table-container').classList.remove('hidden');
     }
 
     /**
-     * Create a book card HTML
+     * Refresh DataTable with current data
      */
-    createBookCard(book) {
-        const statusBadge = book.status === 'finished' 
-            ? '<span class="px-2 py-1 text-xs font-semibold rounded bg-green-500/20 text-green-400">Finished</span>'
-            : '<span class="px-2 py-1 text-xs font-semibold rounded bg-blue-500/20 text-blue-400">Reading</span>';
+    refreshDataTable() {
+        if (this.dataTable) {
+            this.dataTable.destroy();
+        }
+        this.initDataTable();
+    }
 
-        const dateInfo = book.status === 'finished' && book.end_date
-            ? `Finished: ${dateUtils.toDisplayFormat(book.end_date)}`
-            : `Started: ${dateUtils.toDisplayFormat(book.start_date)}`;
+    /**
+     * Apply filters to the book list
+     */
+    applyFilters() {
+        const statusFilter = document.getElementById('status-filter').value;
 
-        return `
-            <div class="glass-card animate-fade-in hover:scale-105 transition-transform">
-                <!-- Card Header -->
-                <div class="flex items-start justify-between mb-4">
-                    <div class="text-4xl">📖</div>
-                    ${statusBadge}
-                </div>
+        // Filter books
+        if (statusFilter === 'all') {
+            this.filteredBooks = [...this.books];
+        } else {
+            this.filteredBooks = this.books.filter(book => book.status === statusFilter);
+        }
 
-                <!-- Book Info -->
-                <h3 class="text-xl font-bold mb-2 line-clamp-2">${book.title}</h3>
-                <p class="text-text-secondary mb-4">${book.author || 'Unknown Author'}</p>
-                
-                <!-- Date Info -->
-                <p class="text-sm text-text-muted mb-4">${dateInfo}</p>
+        // Refresh table
+        this.refreshDataTable();
+    }
 
-                <!-- Actions -->
-                <div class="flex gap-2 pt-4 border-t border-glass-border">
-                    ${book.status === 'reading' ? `
-                        <button 
-                            onclick="booksPage.markAsFinished(${book.id})" 
-                            class="btn btn-secondary flex-1 text-sm py-2"
-                        >
-                            ✓ Finish
-                        </button>
-                    ` : ''}
-                    <button 
-                        onclick="booksPage.editBook(${book.id})" 
-                        class="btn btn-secondary flex-1 text-sm py-2"
-                    >
-                        ✏️ Edit
-                    </button>
-                    <button 
-                        onclick="booksPage.deleteBook(${book.id})" 
-                        class="btn btn-danger flex-1 text-sm py-2"
-                    >
-                        🗑️ Delete
-                    </button>
-                </div>
-            </div>
-        `;
+    /**
+     * Clear all filters
+     */
+    clearFilters() {
+        document.getElementById('status-filter').value = 'all';
+        this.filteredBooks = [...this.books];
+        this.refreshDataTable();
     }
 
     /**
@@ -298,7 +357,8 @@ class BooksPage {
 
             // Reload books and close modal
             await this.loadBooks();
-            this.renderBooks();
+            this.filteredBooks = [...this.books];
+            this.refreshDataTable();
             this.closeModal();
 
         } catch (error) {
@@ -329,7 +389,8 @@ class BooksPage {
             notifications.success(CONFIG.CONSTANTS.MESSAGES.SUCCESS.BOOK_FINISHED);
             
             await this.loadBooks();
-            this.renderBooks();
+            this.filteredBooks = [...this.books];
+            this.refreshDataTable();
         } catch (error) {
             console.error('Error marking book as finished:', error);
             notifications.apiError(error, 'Failed to mark book as finished');
@@ -370,7 +431,8 @@ class BooksPage {
             
             this.closeDeleteModal();
             await this.loadBooks();
-            this.renderBooks();
+            this.filteredBooks = [...this.books];
+            this.refreshDataTable();
             
         } catch (error) {
             console.error('Error deleting book:', error);
@@ -389,86 +451,6 @@ class BooksPage {
     closeDeleteModal() {
         document.getElementById('delete-modal').classList.add('hidden');
         this.currentBookId = null;
-    }
-
-    /**
-     * Handle search
-     */
-    handleSearch(query) {
-        const searchTerm = query.toLowerCase().trim();
-        
-        if (!searchTerm) {
-            this.filteredBooks = [...this.books];
-        } else {
-            this.filteredBooks = this.books.filter(book => {
-                const title = book.title.toLowerCase();
-                const author = (book.author || '').toLowerCase();
-                return title.includes(searchTerm) || author.includes(searchTerm);
-            });
-        }
-
-        this.renderBooks();
-    }
-
-    /**
-     * Handle status filter
-     */
-    handleFilter(status) {
-        if (status === 'all') {
-            this.filteredBooks = [...this.books];
-        } else {
-            this.filteredBooks = this.books.filter(book => book.status === status);
-        }
-
-        this.renderBooks();
-    }
-
-    /**
-     * Show loading state
-     */
-    showLoading() {
-        document.getElementById('loading-state').classList.remove('hidden');
-        document.getElementById('books-grid').classList.add('hidden');
-        document.getElementById('empty-state').classList.add('hidden');
-        document.getElementById('no-results-state').classList.add('hidden');
-        document.getElementById('error-state').classList.add('hidden');
-    }
-
-    /**
-     * Show content
-     */
-    showContent() {
-        document.getElementById('loading-state').classList.add('hidden');
-        document.getElementById('error-state').classList.add('hidden');
-    }
-
-    /**
-     * Show empty state
-     */
-    showEmptyState() {
-        document.getElementById('books-grid').classList.add('hidden');
-        document.getElementById('no-results-state').classList.add('hidden');
-        document.getElementById('empty-state').classList.remove('hidden');
-    }
-
-    /**
-     * Show no results state
-     */
-    showNoResults() {
-        document.getElementById('books-grid').classList.add('hidden');
-        document.getElementById('empty-state').classList.add('hidden');
-        document.getElementById('no-results-state').classList.remove('hidden');
-    }
-
-    /**
-     * Show error state
-     */
-    showError() {
-        document.getElementById('loading-state').classList.add('hidden');
-        document.getElementById('books-grid').classList.add('hidden');
-        document.getElementById('empty-state').classList.add('hidden');
-        document.getElementById('no-results-state').classList.add('hidden');
-        document.getElementById('error-state').classList.remove('hidden');
     }
 }
 

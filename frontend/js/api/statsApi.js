@@ -454,6 +454,22 @@ const statsApi = {
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
         return `${year}-${month}-${day}`;
+    },
+
+    /**
+     * Get Wrapped data for a specific year (Spotify-style year recap)
+     * @param {number} year - Year to get wrapped data for
+     * @returns {Promise<Object>} Comprehensive wrapped data
+     */
+    async getWrapped(year) {
+        try {
+            // Use the dedicated wrapped endpoint if available
+            const wrappedData = await api.get(CONFIG.API.ENDPOINTS.STATS_WRAPPED(year));
+            return wrappedData;
+        } catch (error) {
+            console.error(`Error fetching wrapped data for ${year}:`, error);
+            throw error;
+        }
     }
 };
 

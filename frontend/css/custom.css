@@ -1,0 +1,81 @@
+/* ===================================
+   WRAPPED PAGE STYLES
+   Spotify-style year recap experience
+   =================================== */
+
+/* Wrapped Card Animations */
+.wrapped-card {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transform: scale(0.9);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.wrapped-card.active {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.wrapped-card.exit {
+    opacity: 0;
+    transform: scale(1.1);
+}
+
+/* Stat Number with Gradient */
+.stat-number {
+    font-size: 5rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, #8b5cf6, #ec4899);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    line-height: 1;
+}
+
+/* Floating Emoji Animation */
+.stat-emoji {
+    font-size: 6rem;
+    animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+}
+
+/* Progress Bar */
+.progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #8b5cf6, #ec4899);
+    z-index: 9999;
+    transition: width 0.3s ease;
+}
+
+/* Wrapped Gradient Backgrounds */
+.wrapped-gradient-1 {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(236, 72, 153, 0.2));
+}
+
+.wrapped-gradient-2 {
+    background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(16, 185, 129, 0.2));
+}
+
+.wrapped-gradient-3 {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(239, 68, 68, 0.2));
+}
+
+/* Pulse Animation */
+.pulse-slow {
+    animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: .5; }
+}

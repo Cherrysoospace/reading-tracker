@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reading Tracker - Wrapped</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/tailwind-config.css">
+    <link rel="stylesheet" href="css/custom.css">
+</head>
+<body class="font-['Inter'] overflow-x-hidden">
+    
+    <!-- Progress Bar -->
+    <div id="progress-bar" class="progress-bar" style="width: 0%"></div>
+    
+    <!-- Skip Button -->
+    <button id="skip-btn" class="fixed top-6 right-6 z-50 px-4 py-2 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition-all">
+        Skip ⏭️
+    </button>
+    
+    <!-- Navigation Button (shown at end) -->
+    <a id="home-btn" href="index.html" class="hidden fixed top-6 left-6 z-50 px-4 py-2 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition-all">
+        🏠 Home
+    </a>
+
+    <!-- Year Selection (Initial Screen) -->
+    <div id="year-selection" class="wrapped-card active">
+        <div class="text-center">
+            <h1 class="text-6xl font-black mb-8 text-gradient">📚 Reading Wrapped</h1>
+            <p class="text-2xl text-text-secondary mb-12">Your year in books</p>
+            
+            <div class="glass-card max-w-md mx-auto p-8">
+                <label class="block text-lg font-semibold mb-4">Select Year</label>
+                <select id="year-select" class="input text-xl p-4 text-center">
+                    <!-- Will be populated dynamically -->
+                </select>
+                <button id="start-btn" class="btn btn-primary w-full mt-6 text-xl py-4">
+                    ✨ Let's Go!
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="wrapped-card">
+        <div class="text-center">
+            <div class="inline-block animate-spin rounded-full h-20 w-20 border-t-4 border-b-4 border-accent-purple mb-8"></div>
+            <p class="text-2xl text-text-secondary">Preparing your story...</p>
+        </div>
+    </div>
+
+    <!-- Card 1: Welcome -->
+    <div id="card-1" class="wrapped-card">
+        <div class="text-center max-w-4xl px-6">
+            <div class="stat-emoji mb-8">✨</div>
+            <h2 class="text-6xl font-black mb-6">Your <span id="year-display-1">2025</span></h2>
+            <h3 class="text-4xl font-bold text-gradient mb-4">Reading Journey</h3>
+            <p class="text-xl text-text-secondary">Let's look back at an amazing year of reading</p>
+        </div>
+    </div>
+
+    <!-- Card 2: Total Books -->
+    <div id="card-2" class="wrapped-card">
+        <div class="glass-card max-w-2xl w-full mx-6 p-12 text-center wrapped-gradient-1">
+            <div class="stat-emoji mb-6">📚</div>
+            <p class="text-2xl text-text-secondary mb-4">You read</p>
+            <div class="stat-number mb-4" id="total-books">0</div>
+            <p class="text-2xl font-bold">books in <span id="year-display-2">2025</span></p>
+            <p class="text-lg text-text-muted mt-6" id="books-comparison"></p>
+        </div>
+    </div>
+
+    <!-- Card 3: Total Time -->
+    <div id="card-3" class="wrapped-card">
+        <div class="glass-card max-w-2xl w-full mx-6 p-12 text-center wrapped-gradient-2">
+            <div class="stat-emoji mb-6">⏱️</div>
+            <p class="text-2xl text-text-secondary mb-4">That's</p>
+            <div class="stat-number mb-4" id="total-hours">0</div>
+            <p class="text-2xl font-bold">hours of reading</p>
+            <p class="text-lg text-text-muted mt-6" id="time-equivalent"></p>
+        </div>
+    </div>
+
+    <!-- Card 4: Most Read Book -->
+    <div id="card-4" class="wrapped-card">
+        <div class="glass-card max-w-2xl w-full mx-6 p-12 text-center wrapped-gradient-3">
+            <div class="stat-emoji mb-6">⭐</div>
+            <p class="text-2xl text-text-secondary mb-4">Your most read book was</p>
+            <h3 class="text-4xl font-black mb-2" id="top-book-title">-</h3>
+            <p class="text-xl text-text-muted mb-6" id="top-book-author">-</p>
+            <div class="flex items-center justify-center gap-8 mt-8">
+                <div>
+                    <p class="text-3xl font-bold text-accent-purple" id="top-book-minutes">0</p>
+                    <p class="text-sm text-text-muted">minutes</p>
+                </div>
+                <div>
+                    <p class="text-3xl font-bold text-accent-pink" id="top-book-sessions">0</p>
+                    <p class="text-sm text-text-muted">sessions</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 5: Longest Streak -->
+    <div id="card-5" class="wrapped-card">
+        <div class="glass-card max-w-2xl w-full mx-6 p-12 text-center wrapped-gradient-1">
+            <div class="stat-emoji mb-6">🔥</div>
+            <p class="text-2xl text-text-secondary mb-4">Your longest streak</p>
+            <div class="stat-number mb-4" id="max-streak">0</div>
+            <p class="text-2xl font-bold">days in a row</p>
+            <p class="text-lg text-text-muted mt-6" id="streak-message"></p>
+        </div>
+    </div>
+
+    <!-- Card 6: Busiest Month -->
+    <div id="card-6" class="wrapped-card">
+        <div class="glass-card max-w-2xl w-full mx-6 p-12 text-center wrapped-gradient-2">
+            <div class="stat-emoji mb-6">📅</div>
+            <p class="text-2xl text-text-secondary mb-4">Your busiest reading month</p>
+            <h3 class="text-5xl font-black mb-4" id="busiest-month">-</h3>
+            <div class="flex items-center justify-center gap-8 mt-8">
+                <div>
+                    <p class="text-3xl font-bold text-accent-cyan" id="busiest-month-minutes">0</p>
+                    <p class="text-sm text-text-muted">minutes</p>
+                </div>
+                <div>
+                    <p class="text-3xl font-bold text-accent-emerald" id="busiest-month-sessions">0</p>
+                    <p class="text-sm text-text-muted">sessions</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 7: Average per Day -->
+    <div id="card-7" class="wrapped-card">
+        <div class="glass-card max-w-2xl w-full mx-6 p-12 text-center wrapped-gradient-3">
+            <div class="stat-emoji mb-6">📊</div>
+            <p class="text-2xl text-text-secondary mb-4">On average, you read</p>
+            <div class="stat-number mb-4" id="avg-daily">0</div>
+            <p class="text-2xl font-bold">minutes per day</p>
+            <p class="text-lg text-text-muted mt-6" id="avg-message"></p>
+        </div>
+    </div>
+
+    <!-- Card 8: Finished Books -->
+    <div id="card-8" class="wrapped-card">
+        <div class="glass-card max-w-2xl w-full mx-6 p-12 text-center wrapped-gradient-1">
+            <div class="stat-emoji mb-6">🏆</div>
+            <p class="text-2xl text-text-secondary mb-4">You finished</p>
+            <div class="stat-number mb-4" id="finished-books">0</div>
+            <p class="text-2xl font-bold">books</p>
+            <p class="text-lg text-text-muted mt-6" id="finished-message"></p>
+        </div>
+    </div>
+
+    <!-- Card 9: Summary -->
+    <div id="card-9" class="wrapped-card">
+        <div class="text-center max-w-4xl px-6">
+            <div class="stat-emoji mb-8">🎉</div>
+            <h2 class="text-5xl font-black mb-6">What an incredible year!</h2>
+            <div class="glass-card p-8 mb-8">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    <div>
+                        <p class="text-3xl font-bold text-accent-purple" id="summary-books">0</p>
+                        <p class="text-sm text-text-muted">Books Read</p>
+                    </div>
+                    <div>
+                        <p class="text-3xl font-bold text-accent-pink" id="summary-hours">0h</p>
+                        <p class="text-sm text-text-muted">Time Spent</p>
+                    </div>
+                    <div>
+                        <p class="text-3xl font-bold text-accent-cyan" id="summary-streak">0</p>
+                        <p class="text-sm text-text-muted">Best Streak</p>
+                    </div>
+                    <div>
+                        <p class="text-3xl font-bold text-accent-emerald" id="summary-finished">0</p>
+                        <p class="text-sm text-text-muted">Completed</p>
+                    </div>
+                </div>
+            </div>
+            <p class="text-xl text-text-secondary mb-8">Keep reading and make <span id="year-next">2026</span> even better! 📚✨</p>
+            <div class="flex gap-4 justify-center flex-wrap">
+                <button id="restart-btn" class="btn btn-secondary px-8 py-3">
+                    🔄 See Another Year
+                </button>
+                <a href="index.html" class="btn btn-primary px-8 py-3">
+                    🏠 Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script type="module" src="js/pages/wrapped.js"></script>
+</body>
+</html>

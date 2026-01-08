@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reading Tracker - Dashboard</title>
+    <title>Kiwi - Reading Tracker - Dashboard</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="assets/icons/ico-page.ico">
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -27,7 +30,7 @@
                 <!-- Logo/Brand -->
                 <div class="flex items-center space-x-3">
                     <div class="text-3xl">📚</div>
-                    <h1 class="text-2xl font-bold text-gradient">Reading Tracker</h1>
+                    <h1 class="text-2xl font-bold text-gradient">Kiwi - Reading Tracker</h1>
                 </div>
                 
                 <!-- Navigation Links -->
@@ -66,15 +69,7 @@
             <p class="text-text-secondary">Here's your reading progress</p>
         </div>
 
-        <!-- Year Filter -->
-        <div class="glass-card mb-8 animate-fade-in" id="year-filter-section" style="display: none;">
-            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
-                <h3 class="text-xl font-semibold">Filter by Year:</h3>
-                <div class="flex gap-2" id="year-filter-buttons">
-                    <!-- Year buttons will be dynamically inserted -->
-                </div>
-            </div>
-        </div>
+
 
         <!-- Loading State -->
         <div id="loading-state" class="flex items-center justify-center py-20">
@@ -86,60 +81,44 @@
 
         <!-- Dashboard Content (Hidden until loaded) -->
         <div id="dashboard-content" class="hidden">
-            
-            <!-- Stats Cards Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8" id="stats-cards">
-                <!-- Stats cards will be dynamically inserted here -->
-            </div>
 
             <!-- Streak Section -->
             <div class="glass-card mb-8 animate-fade-in" id="streak-section">
                 <!-- Streak content will be dynamically inserted here -->
             </div>
 
-            <!-- Chart Section -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                <!-- Daily Reading Chart -->
-                <div class="glass-card animate-fade-in">
-                    <h3 class="text-xl font-semibold mb-4 flex items-center">
-                        <span class="text-2xl mr-2">📈</span>
-                        Last 7 Days
-                    </h3>
-                    <div class="h-64">
-                        <canvas id="daily-chart"></canvas>
-                    </div>
-                </div>
-
-                <!-- Most Read Books -->
-                <div class="glass-card animate-fade-in" id="top-books-section">
-                    <h3 class="text-xl font-semibold mb-4 flex items-center">
-                        <span class="text-2xl mr-2">🏆</span>
-                        Most Read Books
-                    </h3>
-                    <div id="top-books-list" class="space-y-3">
-                        <!-- Top books will be dynamically inserted here -->
-                    </div>
+            <!-- Daily Reading Chart - Full Width -->
+            <div class="glass-card mb-8 animate-fade-in">
+                <h3 class="text-2xl font-semibold mb-6 flex items-center">
+                    <span class="text-3xl mr-3">📈</span>
+                    Last 7 Days Reading Activity
+                </h3>
+                <div class="h-80">
+                    <canvas id="daily-chart"></canvas>
                 </div>
             </div>
 
             <!-- Quick Actions -->
             <div class="glass-card animate-fade-in">
-                <h3 class="text-xl font-semibold mb-4 flex items-center">
-                    <span class="text-2xl mr-2">⚡</span>
+                <h3 class="text-2xl font-semibold mb-6 flex items-center">
+                    <span class="text-3xl mr-3">⚡</span>
                     Quick Actions
                 </h3>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <button onclick="location.href='books.html'" class="btn btn-secondary flex items-center justify-center space-x-2">
-                        <span class="text-xl">➕</span>
-                        <span>Add Book</span>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <button onclick="location.href='books.html'" class="btn btn-secondary flex flex-col items-center justify-center space-y-3 py-8 hover:scale-105 transition-transform">
+                        <span class="text-5xl">➕</span>
+                        <span class="text-lg font-semibold">Add Book</span>
+                        <span class="text-sm text-text-muted">Add a new book to your library</span>
                     </button>
-                    <button onclick="location.href='sessions.html'" class="btn btn-primary flex items-center justify-center space-x-2">
-                        <span class="text-xl">📝</span>
-                        <span>Log Session</span>
+                    <button onclick="location.href='sessions.html'" class="btn btn-primary flex flex-col items-center justify-center space-y-3 py-8 hover:scale-105 transition-transform">
+                        <span class="text-5xl">📝</span>
+                        <span class="text-lg font-semibold">Log Session</span>
+                        <span class="text-sm text-text-muted">Record your reading time</span>
                     </button>
-                    <button onclick="location.href='stats.html'" class="btn btn-secondary flex items-center justify-center space-x-2">
-                        <span class="text-xl">📊</span>
-                        <span>View Stats</span>
+                    <button onclick="location.href='stats.html'" class="btn btn-secondary flex flex-col items-center justify-center space-y-3 py-8 hover:scale-105 transition-transform">
+                        <span class="text-5xl">📊</span>
+                        <span class="text-lg font-semibold">View Stats</span>
+                        <span class="text-sm text-text-muted">See your reading statistics</span>
                     </button>
                 </div>
             </div>

@@ -544,13 +544,16 @@ class StatsPage {
             this.charts.monthly.destroy();
         }
 
-        // Get data for last 12 months
+        // Get data for months from January to December of the selected year
         const monthlyData = [];
         const labels = [];
         
-        for (let i = 11; i >= 0; i--) {
-            const date = new Date();
-            date.setMonth(date.getMonth() - i);
+        // Determine which year to use
+        const targetYear = this.selectedYear === 'all' ? new Date().getFullYear() : this.selectedYear;
+        
+        // Loop through all 12 months starting from January (month 0)
+        for (let month = 0; month < 12; month++) {
+            const date = new Date(targetYear, month, 1);
             
             const monthStart = dateUtils.startOfMonth(date);
             const monthEnd = dateUtils.endOfMonth(date);

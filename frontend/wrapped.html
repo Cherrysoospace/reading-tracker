@@ -3,10 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reading Tracker - Wrapped</title>
-    
-    <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="assets/icons/ico-page.ico">
+    <title>Reading Wrapped 2024 📚</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -18,79 +15,408 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="css/tailwind-config.css">
     <link rel="stylesheet" href="css/custom.css">
+    <style>
+        #year-selector {
+            color: white !important;
+            background-color: #1a1a2e !important;
+        }
+        #year-selector option {
+            color: white !important;
+            background-color: #1a1a2e !important;
+            padding: 8px !important;
+            font-size: 16px !important;
+        }
+        /* Fallback for browsers that don't style options well */
+        select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+    </style>
 </head>
-<body class="font-['Inter'] overflow-x-hidden">
+<body class="font-['Inter']">
     
-    <!-- Progress Bar -->
-    <div id="progress-bar" class="progress-bar" style="width: 0%"></div>
-    
-    <!-- Skip Button -->
-    <button id="skip-btn" class="fixed top-6 right-6 z-50 px-4 py-2 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition-all">
-        Skip ⏭️
-    </button>
-    
-    <!-- Navigation Button (shown at end) -->
-    <a id="home-btn" href="index.html" class="hidden fixed top-6 left-6 z-50 px-4 py-2 bg-white/10 backdrop-blur-md rounded-full text-white hover:bg-white/20 transition-all">
-        🏠 Home
-    </a>
-
-    <!-- Year Selection (Initial Screen) -->
-    <div id="year-selection" class="wrapped-card active">
-        <div class="text-center">
-            <h1 class="text-6xl font-black mb-8 text-gradient">📚 Reading Wrapped</h1>
-            <p class="text-2xl text-text-secondary mb-12">Your year in books</p>
-            
-            <div class="glass-card max-w-md mx-auto p-8">
-                <label class="block text-lg font-semibold mb-4">Select Year</label>
-                <select id="year-select" class="input text-xl p-4 text-center">
-                    <!-- Will be populated dynamically -->
-                </select>
-                <button id="start-btn" class="btn btn-primary w-full mt-6 text-xl py-4">
-                    ✨ Let's Go!
-                </button>
+    <!-- Navigation Bar -->
+    <nav class="glass-nav sticky top-0 z-40">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <!-- Logo/Brand -->
+                <div class="flex items-center space-x-3">
+                    <div class="text-3xl">📚</div>
+                    <h1 class="text-2xl font-bold text-gradient">Reading Tracker</h1>
+                </div>
+                
+                <!-- Navigation Links -->
+                <div class="flex items-center space-x-6">
+                    <a href="index.html" class="nav-link">
+                        <span class="text-lg">🏠</span>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="books.html" class="nav-link">
+                        <span class="text-lg">📖</span>
+                        <span>Books</span>
+                    </a>
+                    <a href="sessions.html" class="nav-link">
+                        <span class="text-lg">⏱️</span>
+                        <span>Sessions</span>
+                    </a>
+                    <a href="stats.html" class="nav-link">
+                        <span class="text-lg">📊</span>
+                        <span>Statistics</span>
+                    </a>
+                    <a href="wrapped.html" class="nav-link active">
+                        <span class="text-lg">✨</span>
+                        <span>Wrapped</span>
+                    </a>
+                </div>
             </div>
         </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-6 py-8">
+        
+        <!-- Header Section - Always Visible -->
+        <div class="mb-8 animate-fade-in">
+            <h2 class="text-4xl font-bold mb-2">Your <span id="wrapped-year">2024</span> Reading Wrapped ✨</h2>
+            <p class="text-text-secondary">A recap of your amazing reading journey this year</p>
+        </div>
+
+        <!-- Year Selector - Always Visible -->
+        <div class="glass-card mb-8 animate-fade-in">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                <h3 class="text-xl font-semibold">Enter Year:</h3>
+                <div class="flex gap-3 items-center">
+                    <input 
+                        type="number" 
+                        id="year-input" 
+                        placeholder="2026"
+                        min="2000" 
+                        max="2100"
+                        class="px-4 py-2 bg-surface-dark text-white border border-border-light rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-purple w-32"
+                    />
+                    <button id="load-year-btn" class="btn btn-primary">Load Year</button>
+                    <span id="available-years-text" class="text-sm text-text-secondary"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loading-screen" class="hidden flex items-center justify-center py-20">
+            <div class="text-center">
+                <div class="inline-block animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-accent-purple mb-4"></div>
+                <p class="text-text-secondary">Loading your Reading Wrapped...</p>
+            </div>
+        </div>
+
+        <!-- Error State -->
+        <div id="error-state" class="hidden py-20 text-center">
+            <div class="text-6xl mb-4">😢</div>
+            <h3 class="text-2xl font-bold mb-2">Oops! Something went wrong</h3>
+            <p class="text-text-secondary mb-4">We couldn't load your Reading Wrapped</p>
+            <button onclick="location.reload()" class="btn btn-primary">Try Again</button>
+        </div>
+
+        <!-- Wrapped Content -->
+        <div id="wrapped-container" class="hidden space-y-6">
+            
+            <!-- General Stats -->
+            <div class="glass-card animate-fade-in">
+                <h3 class="text-2xl font-bold mb-6 flex items-center">
+                    <span class="text-3xl mr-3">📊</span>
+                    General Statistics
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="stat-card bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-blue-500/30">
+                        <div class="text-3xl mb-2">⏰</div>
+                        <div class="text-3xl font-bold" id="total-hours">0</div>
+                        <div class="text-sm text-text-secondary">Total Hours</div>
+                        <div class="text-xs text-text-secondary mt-1" id="total-minutes-text">0 minutes</div>
+                    </div>
+                    <div class="stat-card bg-gradient-to-br from-green-500/20 to-teal-500/20 border border-green-500/30">
+                        <div class="text-3xl mb-2">📅</div>
+                        <div class="text-3xl font-bold" id="total-days">0</div>
+                        <div class="text-sm text-text-secondary">Days Reading</div>
+                        <div class="text-xs text-text-secondary mt-1" id="average-per-day-text">Avg: 0 min/day</div>
+                    </div>
+                    <div class="stat-card bg-gradient-to-br from-orange-500/20 to-red-500/20 border border-orange-500/30">
+                        <div class="text-3xl mb-2">🔥</div>
+                        <div class="text-3xl font-bold" id="longest-streak">0</div>
+                        <div class="text-sm text-text-secondary">Longest Streak</div>
+                        <div class="text-xs text-text-secondary mt-1">days in a row</div>
+                    </div>
+                    <div class="stat-card bg-gradient-to-br from-pink-500/20 to-rose-500/20 border border-pink-500/30">
+                        <div class="text-3xl mb-2">✅</div>
+                        <div class="text-3xl font-bold" id="books-finished">0</div>
+                        <div class="text-sm text-text-secondary">Books Finished</div>
+                        <div class="text-xs text-text-secondary mt-1" id="completion-rate-text">0% completion</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Protagonist Book -->
+            <div class="glass-card animate-fade-in" id="most-read-book-card">
+                <h3 class="text-2xl font-bold mb-6 flex items-center">
+                    <span class="text-3xl mr-3">👑</span>
+                    Your Protagonist Book
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="p-6 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-lg border border-indigo-500/30">
+                        <div class="text-lg font-semibold mb-2">Most Read by Time</div>
+                        <div class="text-2xl font-bold mb-1" id="most-read-book-title">-</div>
+                        <div class="text-text-secondary mb-2" id="most-read-book-author">-</div>
+                        <div class="text-accent-purple font-bold" id="most-read-book-time">0 hours</div>
+                    </div>
+                    <div class="p-6 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-lg border border-purple-500/30">
+                        <div class="text-lg font-semibold mb-2">Most Sessions</div>
+                        <div class="text-2xl font-bold mb-1" id="most-sessions-book-title">-</div>
+                        <div class="text-text-secondary mb-2" id="most-sessions-book-author">-</div>
+                        <div class="text-accent-purple font-bold" id="most-sessions-book-count">0 sessions</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Biggest Day -->
+            <div class="glass-card animate-fade-in" id="biggest-day-card">
+                <h3 class="text-2xl font-bold mb-6 flex items-center">
+                    <span class="text-3xl mr-3">🌟</span>
+                    Your Biggest Reading Day
+                </h3>
+                <div class="p-6 bg-gradient-to-br from-yellow-500/20 to-orange-500/20 rounded-lg border border-yellow-500/30">
+                    <div class="text-3xl font-bold mb-2" id="biggest-day-date">-</div>
+                    <div class="text-xl mb-1">
+                        <span id="biggest-day-hours" class="font-bold">0</span> hours
+                    </div>
+                    <div class="text-text-secondary" id="biggest-day-sessions">0 sessions</div>
+                </div>
+            </div>
+
+            <!-- Favorite Author -->
+            <div class="glass-card animate-fade-in" id="favorite-author-card">
+                <h3 class="text-2xl font-bold mb-6 flex items-center">
+                    <span class="text-3xl mr-3">✍️</span>
+                    Your Favorite Author
+                </h3>
+                <div class="p-6 bg-gradient-to-br from-pink-500/20 to-rose-500/20 rounded-lg border border-pink-500/30">
+                    <div class="text-3xl font-bold mb-2" id="favorite-author-name">-</div>
+                    <div class="text-xl text-accent-purple font-bold" id="favorite-author-time">0 hours</div>
+                </div>
+            </div>
+
+            <!-- Reading Habits -->
+            <div class="glass-card animate-fade-in">
+                <h3 class="text-2xl font-bold mb-6 flex items-center">
+                    <span class="text-3xl mr-3">📖</span>
+                    Your Reading Habits
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="p-6 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-lg border border-cyan-500/30">
+                        <div class="text-sm text-text-secondary mb-1">Favorite Day</div>
+                        <div class="text-2xl font-bold" id="favorite-day">-</div>
+                    </div>
+                    <div class="p-6 bg-gradient-to-br from-blue-500/20 to-indigo-500/20 rounded-lg border border-blue-500/30">
+                        <div class="text-sm text-text-secondary mb-1">Best Month</div>
+                        <div class="text-xl font-bold" id="best-month-text">-</div>
+                    </div>
+                    <div class="p-6 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 rounded-lg border border-indigo-500/30">
+                        <div class="text-sm text-text-secondary mb-1">Avg Session</div>
+                        <div class="text-xl font-bold" id="avg-session-text">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reader Personality -->
+            <div class="glass-card animate-fade-in" id="personality-card">
+                <h3 class="text-2xl font-bold mb-6 flex items-center">
+                    <span class="text-3xl mr-3">🎭</span>
+                    Your Reader Personality
+                </h3>
+                <div class="p-6 bg-gradient-to-br from-purple-500/20 to-fuchsia-500/20 rounded-lg border border-purple-500/30">
+                    <div class="text-3xl font-bold mb-4" id="personality-type">-</div>
+                    <div class="text-lg text-text-secondary" id="personality-description">-</div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- JavaScript -->
+    <script type="module" src="js/pages/wrapped.js"></script>
+</body>
+</html>
+
+    </main>
+
+    <!-- JavaScript -->
+    <script type="module" src="js/pages/wrapped.js"></script>
+</body>
+</html>
+    
+    <!-- Navigation (minimal for immersive experience) -->
+    <nav class="fixed top-0 left-0 right-0 z-50 p-6">
+        <div class="flex items-center justify-between">
+            <a href="index.html" class="text-white/70 hover:text-white transition-colors flex items-center space-x-2">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                <span>Back to Dashboard</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- Wrapped Container (old full-screen format - no longer used) -->
+    <div id="wrapped-container-old" class="hidden">
+        
+        <!-- Card Wrapper (each section is a full-screen card) -->
+        <div id="cards-wrapper" class="snap-y snap-mandatory h-screen overflow-y-scroll">
+            
+            <!-- Card 1: Welcome -->
+            <section class="wrapped-card snap-start bg-gradient-to-br from-purple-600 via-pink-600 to-red-600">
+                <div class="wrapped-card-content">
+                    <h1 class="text-7xl font-black mb-6 animate-fade-in">Your <span id="wrapped-year">2024</span></h1>
+                    <h2 class="text-5xl font-bold mb-4 animate-fade-in" style="animation-delay: 0.3s">Reading Wrapped</h2>
+                    <p class="text-2xl text-white/90 animate-fade-in" style="animation-delay: 0.6s">
+                        Let's look back at your reading journey
+                    </p>
+                    <div class="mt-12 text-white/60 animate-bounce">
+                        <p class="text-sm">Scroll to continue</p>
+                        <svg class="w-6 h-6 mx-auto mt-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+                        </svg>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Card 2: Total Time -->
+            <section class="wrapped-card snap-start bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600">
+                <div class="wrapped-card-content">
+                    <p class="text-2xl mb-8 text-white/80">You spent</p>
+                    <h2 class="text-8xl font-black mb-4" id="total-hours">0</h2>
+                    <p class="text-4xl font-bold mb-8">hours reading</p>
+                    <p class="text-xl text-white/70" id="total-minutes-text">That's 0 minutes</p>
+                </div>
+            </section>
+
+            <!-- Card 3: Total Days -->
+            <section class="wrapped-card snap-start bg-gradient-to-br from-green-600 via-teal-600 to-blue-600">
+                <div class="wrapped-card-content">
+                    <p class="text-2xl mb-8 text-white/80">You read on</p>
+                    <h2 class="text-8xl font-black mb-4" id="total-days">0</h2>
+                    <p class="text-4xl font-bold mb-8">different days</p>
+                    <p class="text-xl text-white/70" id="average-per-day-text">Average: 0 minutes per day</p>
+                </div>
+            </section>
+
+            <!-- Card 4: Longest Streak -->
+            <section class="wrapped-card snap-start bg-gradient-to-br from-orange-600 via-red-600 to-pink-600">
+                <div class="wrapped-card-content">
+                    <div class="text-8xl mb-8">🔥</div>
+                    <p class="text-2xl mb-8 text-white/80">Your longest streak</p>
+                    <h2 class="text-8xl font-black mb-4" id="longest-streak">0</h2>
+                    <p class="text-4xl font-bold">days in a row</p>
+                </div>
+            </section>
+
+            <!-- Card 5: Most Read Book -->
+            <section class="wrapped-card snap-start bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600" id="most-read-book-card">
+                <div class="wrapped-card-content">
+                    <div class="text-6xl mb-6">👑</div>
+                    <p class="text-2xl mb-8 text-white/80">Your most read book was</p>
+                    <h2 class="text-5xl font-black mb-4 text-center" id="most-read-book-title">...</h2>
+                    <p class="text-2xl text-white/80 mb-8" id="most-read-book-author">by ...</p>
+                    <p class="text-3xl font-bold" id="most-read-book-time">0 hours</p>
+                </div>
+            </section>
+
+            <!-- Card 6: Biggest Reading Day (REQUIRED) -->
+            <section class="wrapped-card snap-start bg-gradient-to-br from-yellow-500 via-orange-500 to-red-500" id="biggest-day-card">
+                <div class="wrapped-card-content">
+                    <div class="text-6xl mb-6">⭐</div>
+                    <p class="text-2xl mb-8 text-white/80">Your biggest reading day</p>
+                    <h2 class="text-4xl font-black mb-4" id="biggest-day-date">...</h2>
+                    <p class="text-6xl font-black mb-4" id="biggest-day-hours">0h</p>
+                    <p class="text-2xl text-white/80" id="biggest-day-sessions">across 0 sessions</p>
+                </div>
+            </section>
+
+            <!-- Card 7: Favorite Author -->
+            <section class="wrapped-card snap-start bg-gradient-to-br from-pink-600 via-rose-600 to-red-600" id="favorite-author-card">
+                <div class="wrapped-card-content">
+                    <div class="text-6xl mb-6">✍️</div>
+                    <p class="text-2xl mb-8 text-white/80">Your most read author</p>
+                    <h2 class="text-5xl font-black mb-4 text-center" id="favorite-author-name">...</h2>
+                    <p class="text-3xl font-bold" id="favorite-author-time">0 hours</p>
+                </div>
+            </section>
+
+            <!-- Card 8: Reading Habits -->
+            <section class="wrapped-card snap-start bg-gradient-to-br from-cyan-600 via-blue-600 to-indigo-600">
+                <div class="wrapped-card-content">
+                    <div class="text-6xl mb-6">📅</div>
+                    <p class="text-2xl mb-8 text-white/80">Your favorite day to read</p>
+                    <h2 class="text-6xl font-black mb-8" id="favorite-day">...</h2>
+                    <p class="text-xl text-white/70 mb-4" id="best-month-text">Best month: ...</p>
+                    <p class="text-xl text-white/70" id="avg-session-text">Average session: 0 min</p>
+                </div>
+            </section>
+
+            <!-- Card 9: Books Finished -->
+            <section class="wrapped-card snap-start bg-gradient-to-br from-green-600 via-emerald-600 to-teal-600">
+                <div class="wrapped-card-content">
+                    <div class="text-6xl mb-6">✅</div>
+                    <p class="text-2xl mb-8 text-white/80">You finished</p>
+                    <h2 class="text-8xl font-black mb-4" id="books-finished">0</h2>
+                    <p class="text-4xl font-bold mb-8">books</p>
+                    <p class="text-xl text-white/70" id="completion-rate-text">Completion rate: 0%</p>
+                </div>
+            </section>
+
+            <!-- Card 10: Reader Personality -->
+            <section class="wrapped-card snap-start bg-gradient-to-br from-purple-600 via-fuchsia-600 to-pink-600" id="personality-card">
+                <div class="wrapped-card-content">
+                    <div class="text-6xl mb-6">✨</div>
+                    <p class="text-2xl mb-8 text-white/80">You are a</p>
+                    <h2 class="text-5xl font-black mb-8 text-center" id="personality-type">...</h2>
+                    <p class="text-xl text-white/80 text-center max-w-2xl" id="personality-description">...</p>
+                </div>
+            </section>
+
+            <!-- Final Card: Thank You -->
+            <section class="wrapped-card snap-start bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+                <div class="wrapped-card-content">
+                    <div class="text-6xl mb-6">🎉</div>
+                    <h2 class="text-5xl font-black mb-8">That's Your <span id="final-year">2024</span> Wrapped</h2>
+                    <p class="text-2xl text-white/80 mb-12">Here's to even more reading in <span id="next-year">2025</span></p>
+                    <a href="index.html" class="btn btn-primary text-xl px-8 py-4">
+                        Back to Dashboard
+                    </a>
+                </div>
+            </section>
+
+        </div>
+
     </div>
 
-    <!-- Loading Screen -->
-    <div id="loading-screen" class="wrapped-card">
-        <div class="text-center">
-            <div class="inline-block animate-spin rounded-full h-20 w-20 border-t-4 border-b-4 border-accent-purple mb-8"></div>
-            <p class="text-2xl text-text-secondary">Preparing your story...</p>
+    <!-- Error State -->
+    <div id="error-state" class="hidden fixed inset-0 flex items-center justify-center bg-gradient-to-br from-red-900 to-pink-900">
+        <div class="text-center text-white">
+            <div class="text-6xl mb-6">😞</div>
+            <h2 class="text-4xl font-bold mb-4">Oops! Something went wrong</h2>
+            <p class="text-xl mb-8">We couldn't load your Reading Wrapped</p>
+            <button onclick="location.reload()" class="btn btn-primary">
+                Try Again
+            </button>
         </div>
     </div>
 
-    <!-- Card 1: Welcome -->
-    <div id="card-1" class="wrapped-card">
-        <div class="text-center max-w-4xl px-6">
-            <div class="stat-emoji mb-8">✨</div>
-            <h2 class="text-6xl font-black mb-6">Your <span id="year-display-1">2025</span></h2>
-            <h3 class="text-4xl font-bold text-gradient mb-4">Reading Journey</h3>
-            <p class="text-xl text-text-secondary">Let's look back at an amazing year of reading</p>
-        </div>
-    </div>
-
-    <!-- Card 2: Total Books -->
-    <div id="card-2" class="wrapped-card">
-        <div class="glass-card max-w-2xl w-full mx-6 p-12 text-center wrapped-gradient-1">
-            <div class="stat-emoji mb-6">📚</div>
-            <p class="text-2xl text-text-secondary mb-4">You read</p>
-            <div class="stat-number mb-4" id="total-books">0</div>
-            <p class="text-2xl font-bold">books in <span id="year-display-2">2025</span></p>
-            <p class="text-lg text-text-muted mt-6" id="books-comparison"></p>
-        </div>
-    </div>
-
-    <!-- Card 3: Total Time -->
-    <div id="card-3" class="wrapped-card">
-        <div class="glass-card max-w-2xl w-full mx-6 p-12 text-center wrapped-gradient-2">
-            <div class="stat-emoji mb-6">⏱️</div>
-            <p class="text-2xl text-text-secondary mb-4">That's</p>
-            <div class="stat-number mb-4" id="total-hours">0</div>
-            <p class="text-2xl font-bold">hours of reading</p>
-            <p class="text-lg text-text-muted mt-6" id="time-equivalent"></p>
-        </div>
-    </div>
+    <!-- JavaScript -->
+    <script type="module" src="js/pages/wrapped.js"></script>
+</body>
+    <!-- JavaScript -->
+    <script type="module" src="js/pages/wrapped.js"></script>
+</body>
+</html>
 
     <!-- Card 4: Most Read Book -->
     <div id="card-4" class="wrapped-card">

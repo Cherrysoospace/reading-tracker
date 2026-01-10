@@ -297,6 +297,15 @@ class StatsPage {
         const year = this.selectedYear === 'all' ? null : this.selectedYear;
         const periodData = await statsApi.getDailyStatsForPeriod(this.selectedPeriod, year);
 
+        // Debug: Log the data being displayed
+        console.log('Daily Trend Chart - Year:', year, 'Period:', this.selectedPeriod, 'days');
+        console.log('Daily Trend Chart - Data points:');
+        periodData.forEach(stat => {
+            const date = dateUtils.parseLocalDate(stat.date);
+            const dayName = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][date.getDay()];
+            console.log(`  ${stat.date} (${dayName}): ${stat.total_minutes} min`);
+        });
+
         const labels = periodData.map(stat => dateUtils.toShortFormat(stat.date));
         const data = periodData.map(stat => stat.total_minutes);
 
@@ -463,11 +472,21 @@ class StatsPage {
         // Group by day of week
         const weeklyData = [0, 0, 0, 0, 0, 0, 0]; // Sun to Sat
 
+        // Debug: Log daily stats being processed
+        console.log('Weekly Chart - Processing', this.dailyStats.length, 'daily stats for year:', this.selectedYear);
+
         this.dailyStats.forEach(stat => {
-            const date = new Date(stat.date);
+            // Use parseLocalDate to avoid timezone conversion issues
+            const date = dateUtils.parseLocalDate(stat.date);
             const dayOfWeek = date.getDay();
+            console.log(`  ${stat.date} -> Day ${dayOfWeek} (${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][dayOfWeek]}): ${stat.total_minutes} min`);
             weeklyData[dayOfWeek] += stat.total_minutes;
         });
+
+        // Debug: Log final aggregation
+        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        console.log('Weekly Chart - Final aggregation:');
+        days.forEach((day, i) => console.log(`  ${day}: ${weeklyData[i]} min`));
 
         const labels = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -559,7 +578,8 @@ class StatsPage {
             const monthEnd = dateUtils.endOfMonth(date);
             
             const monthSessions = this.dailyStats.filter(stat => {
-                const statDate = new Date(stat.date);
+                // Use parseLocalDate to avoid timezone conversion issues
+                const statDate = dateUtils.parseLocalDate(stat.date);
                 return statDate >= monthStart && statDate <= monthEnd;
             });
             

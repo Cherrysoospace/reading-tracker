@@ -1,0 +1,357 @@
+/* css/wrapped.css */
+
+/* ===================================
+   WRAPPED PAGE STYLES
+   =================================== */
+
+/* Body and container */
+body {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+#wrapped-container {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Cards wrapper with snap scroll */
+#cards-wrapper {
+    scroll-snap-type: y mandatory;
+    scroll-behavior: smooth;
+    overflow-y: scroll;
+    height: 100vh;
+    
+    /* Hide scrollbar */
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+
+#cards-wrapper::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari, Opera */
+}
+
+/* Individual wrapped card */
+.wrapped-card {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    scroll-snap-align: start;
+    position: relative;
+    overflow: hidden;
+    
+    /* Animated gradient background */
+    background-size: 200% 200%;
+    animation: gradientShift 15s ease infinite;
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Card content */
+.wrapped-card-content {
+    text-align: center;
+    color: white;
+    padding: 2rem;
+    max-width: 800px;
+    z-index: 10;
+    
+    /* Make visible by default */
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+/* Card visible state (triggered by Intersection Observer) */
+.wrapped-card.card-visible .wrapped-card-content {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Text styles */
+.wrapped-card h1,
+.wrapped-card h2,
+.wrapped-card h3 {
+    margin: 0;
+    line-height: 1.2;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+}
+
+.wrapped-card h1 {
+    font-size: clamp(3rem, 10vw, 7rem);
+}
+
+.wrapped-card h2 {
+    font-size: clamp(2.5rem, 8vw, 6rem);
+}
+
+.wrapped-card p {
+    margin: 0.5rem 0;
+    line-height: 1.4;
+}
+
+/* Fade-in animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.8s ease forwards;
+    opacity: 0;
+}
+
+/* Stagger animations */
+.animate-fade-in:nth-child(1) { animation-delay: 0s; }
+.animate-fade-in:nth-child(2) { animation-delay: 0.2s; }
+.animate-fade-in:nth-child(3) { animation-delay: 0.4s; }
+.animate-fade-in:nth-child(4) { animation-delay: 0.6s; }
+
+/* Pulse animation for emojis */
+.wrapped-card-content > div[class*="text-"] {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+/* Number animations */
+.wrapped-card h2[id*="total-"],
+.wrapped-card h2[id*="longest-"],
+.wrapped-card h2[id*="books-"] {
+    background: linear-gradient(45deg, #fff, #f0f0f0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: shimmer 3s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+    0%, 100% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+}
+
+/* Loading screen */
+#loading-screen {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    animation: gradientShift 10s ease infinite;
+}
+
+/* Error state */
+#error-state {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+}
+
+/* Year selector custom styling */
+#year-selector {
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+#year-selector:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+#year-selector:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .wrapped-card h1 {
+        font-size: clamp(2rem, 8vw, 4rem);
+    }
+    
+    .wrapped-card h2 {
+        font-size: clamp(1.5rem, 6vw, 3rem);
+    }
+    
+    .wrapped-card p {
+        font-size: clamp(0.9rem, 3vw, 1.2rem);
+    }
+    
+    .wrapped-card-content {
+        padding: 1rem;
+    }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+    .wrapped-card {
+        /* Disable hover effects on touch devices */
+    }
+}
+
+/* Accessibility: Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .wrapped-card,
+    .animate-fade-in,
+    #cards-wrapper {
+        animation: none !important;
+        transition: none !important;
+    }
+    
+    #cards-wrapper {
+        scroll-behavior: auto;
+    }
+}
+
+/* Custom scrollbar for desktop (optional) */
+@media (min-width: 1024px) {
+    #cards-wrapper {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+    }
+    
+    #cards-wrapper::-webkit-scrollbar {
+        display: block;
+        width: 8px;
+    }
+    
+    #cards-wrapper::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    
+    #cards-wrapper::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 4px;
+    }
+    
+    #cards-wrapper::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.5);
+    }
+}
+
+/* Special effects for specific cards */
+
+/* Welcome card glow effect */
+.wrapped-card:first-child {
+    position: relative;
+}
+
+.wrapped-card:first-child::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    height: 80%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    animation: glow 4s ease-in-out infinite;
+}
+
+@keyframes glow {
+    0%, 100% {
+        opacity: 0.5;
+        transform: translate(-50%, -50%) scale(1);
+    }
+    50% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.1);
+    }
+}
+
+/* Biggest day card special styling */
+#biggest-day-card .wrapped-card-content {
+    position: relative;
+}
+
+#biggest-day-card .wrapped-card-content::before {
+    content: '⭐';
+    position: absolute;
+    font-size: 15rem;
+    opacity: 0.1;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    animation: rotate 20s linear infinite;
+}
+
+@keyframes rotate {
+    from {
+        transform: translate(-50%, -50%) rotate(0deg);
+    }
+    to {
+        transform: translate(-50%, -50%) rotate(360deg);
+    }
+}
+
+/* Personality card special effect */
+#personality-card {
+    background: linear-gradient(135deg, #667eea, #764ba2, #f093fb, #667eea);
+    background-size: 400% 400%;
+    animation: gradientFlow 15s ease infinite;
+}
+
+@keyframes gradientFlow {
+    0% { background-position: 0% 50%; }
+    25% { background-position: 50% 50%; }
+    50% { background-position: 100% 50%; }
+    75% { background-position: 50% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* Button hover effects */
+.wrapped-card .btn {
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.wrapped-card .btn:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+}
+
+.wrapped-card .btn:active {
+    transform: translateY(0) scale(1);
+}
+
+/* Text shadow for better readability */
+.wrapped-card h1,
+.wrapped-card h2,
+.wrapped-card h3,
+.wrapped-card p {
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* Loading animation dots */
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+#loading-screen .animate-pulse {
+    animation: bounce 1s ease-in-out infinite;
+}

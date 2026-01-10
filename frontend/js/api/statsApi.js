@@ -206,13 +206,16 @@ const statsApi = {
             
             // Get date range
             const today = new Date();
+            today.setHours(0, 0, 0, 0); // Normalize to start of day
             const startDate = new Date(today);
             startDate.setDate(today.getDate() - days + 1);
 
-            // Filter stats for the period
+            // Filter stats for the period - compare as date strings to avoid timezone issues
+            const startDateStr = this.formatDate(startDate);
+            const todayStr = this.formatDate(today);
             const filteredStats = allStats.filter(stat => {
-                const statDate = new Date(stat.date);
-                return statDate >= startDate && statDate <= today;
+                // Compare strings directly to avoid timezone conversion problems
+                return stat.date >= startDateStr && stat.date <= todayStr;
             });
 
             // Fill in missing dates with 0 minutes

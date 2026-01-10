@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 import uvicorn
 
-from .routers import book_router, session_router, stats_router
+from .routers import book_router, session_router, stats_router, wrapped_router
 from .core.database import DatabaseConnection
 from .core.logging import get_logger, setup_logging
 
@@ -73,6 +73,7 @@ app.add_middleware(
 app.include_router(book_router.router)
 app.include_router(session_router.router)
 app.include_router(stats_router.router)
+app.include_router(wrapped_router.router)
 
 
 @app.get("/", tags=["Root"])
@@ -93,7 +94,8 @@ async def root():
         "endpoints": {
             "books": "/books",
             "sessions": "/sessions",
-            "statistics": "/stats"
+            "statistics": "/stats",
+            "wrapped": "/wrapped"
         }
     }
 

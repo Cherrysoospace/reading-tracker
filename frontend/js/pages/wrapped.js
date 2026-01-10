@@ -1,55 +1,124 @@
 // js/pages/wrapped.js
 
-import statsApi from '../api/statsApi.js';
-import CONFIG from '../config/config.js';
+import wrappedApi from '../api/wrappedApi.js';
+import dateUtils from '../utils/dateUtils.js';
 import notifications from '../utils/notifications.js';
 
 /**
  * Wrapped Page Controller
- * Creates a Spotify-style year recap experience
  */
 class WrappedPage {
     constructor() {
-        this.currentCard = 0;
-        this.totalCards = 9;
         this.wrappedData = null;
-        this.selectedYear = null;
-        this.isAnimating = false;
-        
+        this.selectedYear = new Date().getFullYear();
         this.init();
     }
 
     /**
-     * Initialize page
+     * Initialize wrapped page
      */
-    init() {
-        // Populate year selector
-        this.populateYearSelector();
-        
-        // Setup event listeners
-        this.setupEventListeners();
-        
-        // Setup keyboard navigation
-        this.setupKeyboardNavigation();
+    async init() {
+        try {
+            console.log('Initializing wrapped page...');
+            
+            // Show loading
+            this.showLoading();
+            console.log('Loading screen shown');
+
+            // Load available years
+            await this.loadAvailableYears();
+            console.log('Years loaded');
+
+            // Load wrapped data
+            await this.loadWrappedData();
+            console.log('Wrapped data loaded:', this.wrappedData);
+
+            // Check if we have data
+            if (!this.wrappedData) {
+                throw new Error('No wrapped data available');
+            }
+
+            // Setup event listeners
+            this.setupEventListeners();
+            console.log('Event listeners setup');
+
+            // Populate all cards
+            this.populateCards();
+            console.log('Cards populated');
+
+            // Show wrapped
+            this.showWrapped();
+            console.log('Wrapped shown');
+
+        } catch (error) {
+            console.error('Wrapped page error:', error);
+            this.showError();
+            notifications.error('Failed to load your Reading Wrapped');
+        }
     }
 
     /**
-     * Populate year selector dropdown
+     * Load available years
      */
-    populateYearSelector() {
-        const select = document.getElementById('year-select');
-        const currentYear = new Date().getFullYear();
-        const startYear = CONFIG.CONSTANTS.WRAPPED.MIN_YEAR;
-        
-        // Populate years from current to minimum
-        for (let year = currentYear; year >= startYear; year--) {
-            const option = document.createElement('option');
-            option.value = year;
-            option.textContent = year;
-            if (year === currentYear - 1) {
-                option.selected = true;
+    async loadAvailableYears() {
+        try {
+            console.log('Loading available years...');
+            const response = await wrappedApi.getAvailableYears();
+            console.log('Available years response:', response);
+            
+            const years = response.years || [];
+            console.log('Years array:', years);
+
+            const yearInput = document.getElementById('year-input');
+            const availableYearsText = document.getElementById('available-years-text');
+            
+            if (!yearInput) {
+                console.error('Year input not found!');
+                return;
             }
-            select.appendChild(option);
+
+            if (years.length === 0) {
+                console.warn('No years available');
+                if (availableYearsText) {
+                    availableYearsText.textContent = 'No data available';
+                }
+                return;
+            }
+
+            // Use the latest available year if current year not available
+            if (!years.includes(this.selectedYear) && years.length > 0) {
+                console.log(`Current year ${this.selectedYear} not available, using ${years[0]}`);
+                this.selectedYear = years[0];
+            }
+
+            // Set input value to selected year
+            yearInput.value = this.selectedYear;
+            
+            // Show available years
+            if (availableYearsText) {
+                availableYearsText.textContent = `Available: ${years.join(', ')}`;
+            }
+            
+            console.log('Year input configured successfully');
+
+        } catch (error) {
+            console.error('Error loading years:', error);
+            const yearInput = document.getElementById('year-input');
+            if (yearInput) {
+                yearInput.value = this.selectedYear;
+            }
+        }
+    }
+
+    /**
+     * Load wrapped data for selected year
+     */
+    async loadWrappedData() {
+        try {
+            this.wrappedData = await wrappedApi.getSummary(this.selectedYear);
+        } catch (error) {
+            console.error('Error loading wrapped data:', error);
+            throw error;
         }
     }
 
@@ -57,276 +126,176 @@ class WrappedPage {
      * Setup event listeners
      */
     setupEventListeners() {
-        // Start button
-        document.getElementById('start-btn').addEventListener('click', () => {
-            this.startWrapped();
-        });
-
-        // Skip button
-        document.getElementById('skip-btn').addEventListener('click', () => {
-            this.nextCard();
-        });
-
-        // Restart button
-        document.getElementById('restart-btn').addEventListener('click', () => {
-            this.restart();
-        });
-
-        // Click to advance
-        document.addEventListener('click', (e) => {
-            // Don't advance on button clicks or during animations
-            if (e.target.tagName === 'BUTTON' || 
-                e.target.tagName === 'SELECT' || 
-                e.target.tagName === 'A' ||
-                this.isAnimating) {
-                return;
-            }
-            
-            if (this.currentCard > 0 && this.currentCard < this.totalCards) {
-                this.nextCard();
-            }
-        });
-    }
-
-    /**
-     * Setup keyboard navigation
-     */
-    setupKeyboardNavigation() {
-        document.addEventListener('keydown', (e) => {
-            if (this.currentCard === 0) return; // Don't navigate on selection screen
-            
-            if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'Enter') {
-                e.preventDefault();
-                this.nextCard();
-            } else if (e.key === 'ArrowLeft') {
-                e.preventDefault();
-                this.previousCard();
-            }
-        });
-    }
-
-    /**
-     * Start wrapped experience
-     */
-    async startWrapped() {
-        this.selectedYear = parseInt(document.getElementById('year-select').value);
+        // Load year button
+        const loadYearBtn = document.getElementById('load-year-btn');
+        const yearInput = document.getElementById('year-input');
         
-        try {
-            // Show loading
-            this.showCard('loading-screen');
+        if (loadYearBtn && yearInput) {
+            loadYearBtn.addEventListener('click', async () => {
+                const year = parseInt(yearInput.value);
+                if (year && year >= 2000 && year <= 2100) {
+                    this.selectedYear = year;
+                    await this.reloadWrapped();
+                } else {
+                    notifications.error('Please enter a valid year (2000-2100)');
+                }
+            });
             
-            // Fetch wrapped data
-            this.wrappedData = await statsApi.getWrapped(this.selectedYear);
-            
-            // Debug: Log the received data
-            console.log('Wrapped data received:', this.wrappedData);
-            console.log('Data keys:', Object.keys(this.wrappedData || {}));
-            console.log('Total books:', this.wrappedData?.total_books);
-            console.log('Total minutes:', this.wrappedData?.total_minutes);
-            
-            // Check if there's data
-            if (!this.wrappedData) {
-                console.log('No data returned from API');
-                notifications.info(`No reading data found for ${this.selectedYear}`);
-                this.restart();
-                return;
-            }
-            
-            // Populate data in cards
-            this.populateCards();
-            
-            // Start from first card
-            setTimeout(() => {
-                this.currentCard = 1;
-                this.showCard('card-1');
-                this.updateProgress();
-            }, 1500);
-            
-        } catch (error) {
-            console.error('Error loading wrapped data:', error);
-            notifications.error('Failed to load your reading wrapped');
-            this.restart();
+            // Also allow Enter key
+            yearInput.addEventListener('keypress', async (e) => {
+                if (e.key === 'Enter') {
+                    loadYearBtn.click();
+                }
+            });
         }
+        
+        console.log('Event listeners setup');
     }
 
     /**
      * Populate all cards with data
      */
     populateCards() {
-        const data = this.wrappedData;
-        const year = this.selectedYear;
-        const nextYear = year + 1;
-        
-        // Update year displays
-        document.querySelectorAll('[id^="year-display"]').forEach(el => {
-            el.textContent = year;
-        });
-        document.getElementById('year-next').textContent = nextYear;
-        
-        // Card 2: Total Books
-        const totalBooks = data.books_read || 0;
-        document.getElementById('total-books').textContent = totalBooks;
-        const avgBooksPerMonth = (totalBooks / 12).toFixed(1);
-        document.getElementById('books-comparison').textContent = 
-            `That's about ${avgBooksPerMonth} books per month! 📚`;
-        
-        // Card 3: Total Time
-        const totalMinutes = data.total_minutes_read || 0;
-        const totalHours = Math.round(totalMinutes / 60);
-        document.getElementById('total-hours').textContent = totalHours;
-        const days = Math.round(totalHours / 24);
-        document.getElementById('time-equivalent').textContent = 
-            days > 0 ? `That's ${days} full ${days === 1 ? 'day' : 'days'} of reading! 🤯` : 'Every minute counts! 📖';
-        
-        // Card 4: Most Read Book
-        if (data.most_read_book) {
-            document.getElementById('top-book-title').textContent = data.most_read_book.title || 'Unknown';
-            document.getElementById('top-book-author').textContent = 
-                data.most_read_book.author ? `by ${data.most_read_book.author}` : 'Unknown Author';
-            document.getElementById('top-book-minutes').textContent = data.most_read_book.total_minutes || 0;
-            // Backend no devuelve session_count, usar top_books para obtenerlo
-            const topBook = data.top_books?.find(b => b.book_id === data.most_read_book.book_id);
-            document.getElementById('top-book-sessions').textContent = topBook?.session_count || 0;
-        } else {
-            document.getElementById('top-book-title').textContent = 'No data';
-            document.getElementById('top-book-author').textContent = '';
-            document.getElementById('top-book-minutes').textContent = '0';
-            document.getElementById('top-book-sessions').textContent = '0';
-        }
-        
-        // Card 5: Longest Streak (usar current_streak si no hay longest_streak)
-        const maxStreak = data.longest_streak || data.current_streak || 0;
-        document.getElementById('max-streak').textContent = maxStreak;
-        document.getElementById('streak-message').textContent = 
-            maxStreak >= 30 ? 'Incredible dedication! 🌟' :
-            maxStreak >= 14 ? 'Amazing consistency! 💪' :
-            maxStreak >= 7 ? 'Great habit building! 🔥' :
-            'Keep going, consistency is key! 💫';
-        
-        // Card 6: Busiest Month
-        if (data.busiest_month) {
-            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
-                              'July', 'August', 'September', 'October', 'November', 'December'];
-            document.getElementById('busiest-month').textContent = 
-                monthNames[data.busiest_month.month - 1] || 'Unknown';
-            document.getElementById('busiest-month-minutes').textContent = 
-                data.busiest_month.total_minutes || 0;
-            document.getElementById('busiest-month-sessions').textContent = 
-                data.busiest_month.session_count || 0;
-        } else {
-            document.getElementById('busiest-month').textContent = 'No data';
-            document.getElementById('busiest-month-minutes').textContent = '0';
-            document.getElementById('busiest-month-sessions').textContent = '0';
-        }
-        
-        // Card 7: Average per Day
-        const avgDaily = Math.round(data.average_minutes_per_day || 0);
-        document.getElementById('avg-daily').textContent = avgDaily;
-        document.getElementById('avg-message').textContent = 
-            avgDaily >= 60 ? 'Over an hour every day! Outstanding! 🏆' :
-            avgDaily >= 30 ? 'Half an hour daily! Fantastic! 🌟' :
-            avgDaily >= 15 ? 'Steady progress! Keep it up! 📚' :
-            'Every bit of reading matters! 💙';
-        
-        // Card 8: Finished Books
-        const finishedBooks = data.books_finished_in_year || 0;
-        document.getElementById('finished-books').textContent = finishedBooks;
-        document.getElementById('finished-message').textContent = 
-            finishedBooks >= 20 ? 'You\'re a reading machine! 🚀' :
-            finishedBooks >= 10 ? 'Double digits! Impressive! 🎉' :
-            finishedBooks >= 5 ? 'Quality over quantity! 📖' :
-            finishedBooks > 0 ? 'Every completion is a victory! 🏅' :
-            'Keep reading, you\'ll finish more soon! 💪';
-        
-        // Card 9: Summary
-        document.getElementById('summary-books').textContent = totalBooks;
-        document.getElementById('summary-hours').textContent = totalHours + 'h';
-        document.getElementById('summary-streak').textContent = maxStreak;
-        document.getElementById('summary-finished').textContent = finishedBooks;
-    }
-
-    /**
-     * Show specific card
-     */
-    showCard(cardId) {
-        this.isAnimating = true;
-        
-        // Hide all cards
-        const cards = document.querySelectorAll('.wrapped-card');
-        cards.forEach(card => {
-            card.classList.remove('active');
-            card.classList.add('exit');
-        });
-        
-        // Show target card
-        setTimeout(() => {
-            cards.forEach(card => {
-                card.classList.remove('exit');
-            });
+        try {
+            console.log('Populating cards...');
             
-            const targetCard = document.getElementById(cardId);
-            if (targetCard) {
-                targetCard.classList.add('active');
+            // Update year
+            const yearEl = document.getElementById('wrapped-year');
+            if (yearEl) yearEl.textContent = this.selectedYear;
+
+            // General Stats
+            const stats = this.wrappedData.general_stats || {};
+            this.setElementText('total-hours', Math.round(stats.total_hours || 0));
+            this.setElementText('total-minutes-text', `${stats.total_minutes || 0} minutes`);
+            this.setElementText('total-days', stats.total_days_with_reading || 0);
+            this.setElementText('average-per-day-text', `Avg: ${Math.round(stats.average_minutes_per_active_day || 0)} min/day`);
+            this.setElementText('longest-streak', stats.longest_streak || 0);
+
+            // Protagonist Book
+            const protagonist = this.wrappedData.protagonist_book || {};
+            if (protagonist.most_read_by_minutes) {
+                const book = protagonist.most_read_by_minutes;
+                this.setElementText('most-read-book-title', book.title || 'Unknown');
+                this.setElementText('most-read-book-author', `by ${book.author || 'Unknown'}`);
+                this.setElementText('most-read-book-time', `${Math.round((book.minutes || 0) / 60)} hours`);
             }
             
-            this.isAnimating = false;
-        }, 300);
-    }
-
-    /**
-     * Go to next card
-     */
-    nextCard() {
-        if (this.isAnimating) return;
-        
-        if (this.currentCard < this.totalCards) {
-            this.currentCard++;
-            this.showCard(`card-${this.currentCard}`);
-            this.updateProgress();
-            
-            // Show home button on last card
-            if (this.currentCard === this.totalCards) {
-                document.getElementById('home-btn').classList.remove('hidden');
-                document.getElementById('skip-btn').classList.add('hidden');
+            if (protagonist.most_sessions) {
+                const book = protagonist.most_sessions;
+                this.setElementText('most-sessions-book-title', book.title || 'Unknown');
+                this.setElementText('most-sessions-book-author', `by ${book.author || 'Unknown'}`);
+                this.setElementText('most-sessions-book-count', `${book.sessions || 0} sessions`);
             }
-        }
-    }
 
-    /**
-     * Go to previous card
-     */
-    previousCard() {
-        if (this.isAnimating) return;
-        
-        if (this.currentCard > 1) {
-            this.currentCard--;
-            this.showCard(`card-${this.currentCard}`);
-            this.updateProgress();
+            // Biggest Day
+            const biggestDay = this.wrappedData.biggest_reading_day;
+            if (biggestDay && biggestDay.date) {
+                try {
+                    this.setElementText('biggest-day-date', dateUtils.toDisplayFormat(biggestDay.date));
+                } catch (e) {
+                    this.setElementText('biggest-day-date', biggestDay.date);
+                }
+                this.setElementText('biggest-day-hours', Math.round(biggestDay.hours || 0));
+                this.setElementText('biggest-day-sessions', `${biggestDay.sessions || 0} sessions`);
+            }
+
+            // Favorite Author
+            const authors = this.wrappedData.authors_stats || {};
+            if (authors.most_read_author) {
+                const author = authors.most_read_author;
+                this.setElementText('favorite-author-name', author.name || 'Unknown');
+                this.setElementText('favorite-author-time', `${Math.round(author.hours || 0)} hours`);
+            }
+
+            // Reading Habits
+            const habits = this.wrappedData.reading_habits || {};
+            this.setElementText('favorite-day', habits.favorite_day || 'N/A');
+            if (habits.best_month) {
+                this.setElementText('best-month-text', `${habits.best_month.name || 'N/A'} (${Math.round(habits.best_month.hours || 0)}h)`);
+            }
+            this.setElementText('avg-session-text', `${Math.round(habits.average_session_duration || 0)} min`);
+
+            // Books Status
+            const status = this.wrappedData.reading_status || {};
+            this.setElementText('books-finished', status.books_finished || 0);
+            this.setElementText('completion-rate-text', `${Math.round(status.completion_rate || 0)}% completion`);
+
+            // Reader Personality
+            const personality = this.wrappedData.reader_personality || {};
+            if (personality.type) {
+                const typeFormatted = personality.type
+                    .split('_')
+                    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                    .join(' ');
+                this.setElementText('personality-type', typeFormatted);
+            }
+            this.setElementText('personality-description', personality.description || 'Keep reading!');
             
-            // Hide home button if not on last card
-            document.getElementById('home-btn').classList.add('hidden');
-            document.getElementById('skip-btn').classList.remove('hidden');
+            console.log('Cards populated successfully');
+            
+        } catch (error) {
+            console.error('Error populating cards:', error);
+            throw error;
         }
     }
 
     /**
-     * Update progress bar
+     * Helper to set element text content
      */
-    updateProgress() {
-        const progress = (this.currentCard / this.totalCards) * 100;
-        document.getElementById('progress-bar').style.width = `${progress}%`;
+    setElementText(id, text) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = text;
     }
 
     /**
-     * Restart wrapped experience
+     * Reload wrapped for different year
      */
-    restart() {
-        this.currentCard = 0;
-        this.wrappedData = null;
-        document.getElementById('progress-bar').style.width = '0%';
-        document.getElementById('home-btn').classList.add('hidden');
-        document.getElementById('skip-btn').classList.remove('hidden');
-        this.showCard('year-selection');
+    async reloadWrapped() {
+        try {
+            this.showLoading();
+            await this.loadWrappedData();
+            this.populateCards();
+            this.showWrapped();
+        } catch (error) {
+            console.error('Error reloading wrapped:', error);
+            notifications.error('Failed to load wrapped for selected year');
+        }
+    }
+
+    /**
+     * Show loading screen
+     */
+    showLoading() {
+        document.getElementById('loading-screen').classList.remove('hidden');
+        document.getElementById('wrapped-container').classList.add('hidden');
+        document.getElementById('error-state').classList.add('hidden');
+    }
+
+    /**
+     * Show wrapped content
+     */
+    showWrapped() {
+        console.log('showWrapped called');
+        const loadingScreen = document.getElementById('loading-screen');
+        const wrappedContainer = document.getElementById('wrapped-container');
+        const errorState = document.getElementById('error-state');
+        
+        console.log('Elements:', { loadingScreen, wrappedContainer, errorState });
+        
+        if (loadingScreen) loadingScreen.classList.add('hidden');
+        if (wrappedContainer) wrappedContainer.classList.remove('hidden');
+        if (errorState) errorState.classList.add('hidden');
+        
+        console.log('Wrapped container classes after show:', wrappedContainer?.className);
+    }
+
+    /**
+     * Show error state
+     */
+    showError() {
+        document.getElementById('loading-screen').classList.add('hidden');
+        document.getElementById('wrapped-container').classList.add('hidden');
+        document.getElementById('error-state').classList.remove('hidden');
     }
 }
 
